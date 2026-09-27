@@ -1,0 +1,95 @@
+\section{Recolección de datos}\label{sec:descarga}
+
+\subsection{Procedimiento}
+La descarga se automatizó con scripts de Python en \archivo{src/download/}, uno por fuente:
+
+\begin{center}
+\small
+\begin{tabular}{L{3.8cm}L{10.2cm}}
+\toprule
+\textbf{Script} & \textbf{Qué hace}\\
+\midrule
+\archivo{comun.py} & Funciones compartidas: no vuelve a bajar lo que ya existe, espera 2~s entre descargas,
+reintenta si falla y registra cada archivo en \archivo{data/raw/MANIFEST.csv}.\\
+\archivo{portal_cdmx.py} & Consulta la API CKAN del portal de la CDMX para obtener las URL vigentes de
+cada dataset y las descarga.\\
+\archivo{inegi.py} & DENUE (cortes anuales), Censo 2020, Marco Geoestadístico y microdatos de la ENOE.\\
+\archivo{imss.py} & Lee en \emph{streaming} el CSV nacional mensual del IMSS y guarda solo las filas de la CDMX.\\
+\archivo{semaforo.py} & Semáforo epidemiológico federal semanal por entidad.\\
+\archivo{registrar_manual.py} & Registra en el MANIFEST los archivos bajados a mano desde el navegador.\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\paragraph{Trazabilidad.} El archivo \archivo{MANIFEST.csv} guarda, para cada archivo descargado, la
+fuente, la URL, la fecha de descarga, el tamaño y su huella SHA-256. Con eso cualquier persona puede
+verificar que los datos usados son exactamente los publicados.
+
+\paragraph{Descargas responsables.} Todas las fuentes son de datos abiertos publicados para su
+reutilización. Aun así, los scripts esperan entre descargas y usan caché para no repetir peticiones.
+La única fuente que bloquea las descargas automáticas es el SESNSP, que publica en SharePoint. Ese
+archivo se descarga a mano desde el navegador y después se registra en el MANIFEST.
+
+\paragraph{Filtrado del IMSS.} El IMSS publica un archivo nacional por mes de unos 350~MB. En lugar
+de guardarlo completo, el script lo lee línea por línea mientras se descarga y conserva solo las
+filas con \archivo{cve_entidad = 9}. El resultado ocupa unos 6~MB comprimidos por mes, frente a los
+350~MB originales. La codificación de los archivos cambia entre años (Latin-1 en 2019 y UTF-8 en
+2025), por lo que el filtro trabaja sobre los bytes sin decodificarlos.
+
+\subsection{Cobertura real de los datos}
+Al revisar lo descargado, la cobertura resultó distinta de la que anuncian los catálogos
+(Tabla~\ref{tab:cobertura}).
+
+{\small
+\begin{longtable}{L{3.6cm}L{3.3cm}rL{5.2cm}}
+\caption{Cobertura real de los conjuntos descargados.}\label{tab:cobertura}\\
+\toprule
+\textbf{Conjunto} & \textbf{Cobertura} & \textbf{Registros} & \textbf{Observaciones}\\
+\midrule\endhead
+Metro (simple) & 2010-01 -- 2026-07 & 1\,180\,920 & Texto mal codificado; nombres de línea inconsistentes\\
+Metro (desglosada) & 2021-01 -- 2026-07 & 1\,192\,230 & Solo desde 2021\\
+Metrobús (simple) & 2005-07 -- 2026-07 & 53\,732 & Desglosada solo desde 2021\\
+Ecobici (diaria) & 2010-02 -- 2024-07 & 12\,261 & Termina en julio de 2024\\
+Hechos de tránsito (comparable) & 2018 -- 2019 & 30\,758 & No cubre la pandemia\\
+Hechos de tránsito (ampliada) & 2018 -- 2023 & 134\,079 & No comparable entre años\\
+Hechos de tránsito 2024 & 2024 & 30\,655 & Fechas en dd/mm/aaaa\\
+Carpetas FGJ & 2016-01 -- 2024-07 & 1\,987\,424 & 2024 incompleto\\
+Llamadas al 911 & 2019-S1 -- 2022-S1 & 4\,117\,932 & No llega al post-pandemia\\
+Ocupación hotelera & 2018-10 -- 2024-07 & 70 & 16 meses de línea base\\
+Casos COVID CDMX & 2020-03 -- 2023-04 & 1\,113 & ---\\
+Semáforo federal & 2020-W22 -- 2023-W24 & 32 entidades & Faltan 2020-W53 y 2022-W01\\
+DENUE & nov-2019 -- nov-2024, vigente & 7 cortes & No hay corte de nov-2025\\
+ENOE & 2016; 2018-T3 -- 2026-T2 & 35 trimestres & Faltan 2017, 2018-T1/T2 y 2020-T2\\
+IMSS asegurados & 2016-01 -- 2026-08 & 128 meses & Filtrado a la CDMX; sin desglose por alcaldía\\
+SESNSP municipal & 2015 -- 2025 & --- & Descarga manual pendiente\\
+\bottomrule
+\end{longtable}}
+
+\subsection{Problemas encontrados y decisiones}
+\begin{enumerate}
+  \item \textbf{Hechos de tránsito.} La \enquote{serie comparable} solo cubre 2018--2019. Se agregó la
+        serie \enquote{ampliada} (2018--2023) y la de 2024. Esta serie pasa de unos 17 mil hechos
+        anuales en 2018--2020 a unos 30 mil en 2022--2023. El salto se debe a cambios en la forma de
+        registro, por lo que la serie se usará con cautela, principalmente como indicador relativo.
+  \item \textbf{Series que terminan en julio de 2024.} Las carpetas de la FGJ, Ecobici y la
+        ocupación hotelera dejan de actualizarse en julio de 2024. Por eso la ventana post-pandemia
+        común a todas las fuentes es \textbf{enero de 2023 a julio de 2024}. Metro, Metrobús e IMSS
+        permiten extender el análisis hasta 2026.
+  \item \textbf{Llamadas al 911.} El portal solo publica hasta el primer semestre de 2022. Además,
+        las fechas vienen en varios formatos, y alrededor del 60\,\% no se interpreta con un solo formato.
+  \item \textbf{ENOE.} Los microdatos de 2017 y del primer semestre de 2018 no están en datos
+        abiertos con el nombre estándar. En el segundo trimestre de 2020 la encuesta presencial se
+        suspendió por la pandemia. De 2020-T3 a 2022-T4 se publicó como \enquote{ENOE nueva}
+        (\archivo{enoen}).
+  \item \textbf{Semáforo epidemiológico.} No existe como dataset oficial descargable. Se usó la
+        compilación del paquete de R \archivo{semaforos} (Hugo Gruson), que recopila los semáforos
+        semanales publicados por la Secretaría de Salud. Corresponde al semáforo \emph{federal}. El
+        semáforo local de la CDMX a veces se adelantó: por ejemplo, el rojo se decretó el 18 de
+        diciembre de 2020 y el federal entró el 21.
+  \item \textbf{IMSS sin alcaldías.} El diccionario oficial y la revisión de los 128 meses muestran
+        que el campo \archivo{cve_municipio} viene vacío para toda la CDMX. El empleo formal solo puede
+        analizarse para la ciudad completa, aunque con desglose por sector, sexo, edad y salario. La
+        dimensión económica por alcaldía se cubrirá con el DENUE.
+  \item \textbf{Archivos duplicados.} Se descartó el acumulado de carpetas de la FGJ (560~MB) porque
+        contiene los mismos registros que los archivos anuales.
+\end{enumerate}

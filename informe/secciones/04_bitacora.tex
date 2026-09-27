@@ -1,0 +1,189 @@
+\section{Bitácora de actividades}\label{sec:bitacora}
+
+Esta sección registra en orden cronológico cada actividad realizada: qué se hizo, cómo se hizo
+y qué se obtuvo.
+
+% Plantilla para nuevas entradas:
+% \subsection{AAAA-MM-DD --- Título de la actividad}
+% \textbf{Objetivo:} ...
+% \textbf{Procedimiento:} ...
+% \textbf{Resultado:} ...
+% \textbf{Observaciones / problemas:} ...
+
+\subsection{2026-09-26 --- Definición del problema}
+\textbf{Objetivo:} delimitar la pregunta de investigación y el alcance de la fase~1.\\
+\textbf{Procedimiento:} se definieron los periodos de análisis, las unidades temporal y territorial,
+las variables objetivo candidatas y las hipótesis (Sección~\ref{sec:problema}).\\
+\textbf{Resultado:} documentos \archivo{CONTEXTO.md} y \archivo{PENDIENTES.md} y este informe.
+
+\subsection{2026-09-26 --- Identificación y verificación de fuentes}
+\textbf{Objetivo:} localizar los conjuntos de datos que cubren las tres dimensiones y la pandemia.\\
+\textbf{Procedimiento:} se consultó el catálogo del Portal de Datos Abiertos de la CDMX a través de
+su API CKAN (\archivo{/api/3/action/package_search} y \archivo{package_show}). Se buscaron los
+términos \emph{afluencia}, \emph{carpetas}, \emph{ecobici}, \emph{hechos de tránsito}, \emph{covid},
+\emph{víctimas}, \emph{911}, \emph{metrobús}, \emph{empleo}, \emph{unidades económicas},
+\emph{ocupación hotelera} y \emph{calidad del aire}. Para cada conjunto se revisó la lista de
+archivos (recursos) que ofrece.\\
+\textbf{Resultado:} se verificaron 20 conjuntos del portal (Sección~\ref{sec:fuentes}). Además:
+\begin{itemize}
+  \item Las carpetas de investigación de la FGJ se publican como CSV anuales de 2016 a 2024, más un
+        archivo acumulado, en \url{https://archivo.datos.cdmx.gob.mx/FGJ/carpetas/}.
+  \item Las llamadas al 911 se publican en archivos semestrales desde 2019-S1.
+  \item El conjunto \enquote{Datos de movilidad (histórico COVID-19)} contiene índices relativos, no
+        valores absolutos, por lo que no sirve para comparar con el periodo anterior a 2020.
+\end{itemize}
+\textbf{Observaciones:} el semáforo epidemiológico no está publicado como conjunto de datos y deberá
+construirse a mano.
+
+\subsection{2026-09-26 --- Inspección inicial de la afluencia del Metro}
+\textbf{Objetivo:} comprobar el formato y la cobertura de la fuente principal de movilidad.\\
+\textbf{Procedimiento:} se descargó el recurso \enquote{Afluencia Diaria del Metro (Simple)} y se
+revisaron su encabezado, número de filas y rango de fechas con Python (módulo \archivo{csv}).\\
+\textbf{Resultado:}
+\begin{itemize}
+  \item Columnas: \archivo{fecha, anio, mes, linea, estacion, afluencia}.
+  \item 1\,180\,920 registros; cada registro corresponde a un día, una línea y una estación.
+  \item Cobertura: del 2010-01-01 al 2026-07-31. La línea base anterior a la pandemia es suficiente.
+\end{itemize}
+\textbf{Observaciones / problemas:} los nombres de las estaciones presentan \emph{mojibake}
+(\texttt{Isabel la CatÃ³lica}). Se registró como tarea de limpieza.
+
+\subsection{2026-09-26 --- Entorno de Python y notebook de contexto}
+\textbf{Objetivo:} contar con un notebook que explique la problemática, lo que se analizará y los
+conjuntos de datos, y que sirva como primera exploración reproducible.\\
+\textbf{Procedimiento:}
+\begin{itemize}
+  \item Se creó el entorno virtual \archivo{.venv} con \archivo{pandas}, \archivo{requests},
+        \archivo{matplotlib}, \archivo{ftfy}, \archivo{pyarrow} y \archivo{jupyter}.
+  \item Se elaboró el notebook \archivo{notebooks/00_contexto_y_datasets.ipynb}. Contiene la
+        problemática, la pregunta, las dimensiones y variables, los periodos, las hipótesis y un
+        catálogo de 29 conjuntos de datos.
+  \item El notebook verifica en vivo, mediante la API CKAN, que cada conjunto del portal existe, y
+        muestra su fecha de actualización y su número de archivos.
+  \item Se descargó la afluencia diaria del Metro en \archivo{data/raw/metro/} (58~MB) para hacer
+        una primera exploración.
+\end{itemize}
+\textbf{Resultado:}
+\begin{itemize}
+  \item La afluencia mensual del Metro tocó fondo en \textbf{mayo de 2020}, con un índice de 27
+        (2019 = 100), es decir, una caída del 73\,\%. En julio de 2026 el índice es de 78.1: la
+        afluencia \textbf{aún no recupera el nivel previo a la pandemia} (Figura~\ref{fig:metro}).
+  \item Promedio anual del índice: 2020 = 56.1, 2021 = 49.8, 2022 = 64.6, 2023 = 69.9,
+        2024 = 73.5 y 2025 = 78.7.
+  \item La caída aislada de septiembre de 2017 corresponde al sismo del 19-S, un ejemplo de choque
+        puntual frente al choque prolongado de la pandemia.
+\end{itemize}
+\textbf{Problemas de calidad detectados:}
+\begin{enumerate}
+  \item \emph{Mojibake} en 57 de 168 nombres de estación. Se reparó con \archivo{ftfy}; tras la
+        reparación quedan 165 estaciones únicas, porque había variantes duplicadas.
+  \item Los \textbf{nombres de línea son inconsistentes}: entre 2021 y 2023 aparece
+        \texttt{LÃnea 1} y en los demás años \archivo{Linea 1}. Por eso hay 24 valores en lugar
+        de 12 líneas, y cada línea queda partida en dos series. Se normalizó a \archivo{Linea N}.
+  \item Los cierres de la Línea~12 (2021--2023) y de la Línea~1 (2022--2024) reducen la afluencia
+        por causas ajenas a la demanda. Deben marcarse en la limpieza.
+\end{enumerate}
+
+El análisis detallado de estos resultados está en la Sección~\ref{sec:exploracion}.
+
+
+\subsection{2026-09-26 --- Ampliación del informe con los resultados del notebook}
+\textbf{Objetivo:} que el informe contenga la misma información que el notebook de contexto.\\
+\textbf{Procedimiento:} se añadieron varios elementos al informe:
+\begin{itemize}
+  \item La tabla de problemas de los datos y la tabla de dimensiones y variables (Sección~\ref{sec:problema}).
+  \item La verificación en vivo de los 20 conjuntos del portal (Tabla~\ref{tab:verificacion}).
+  \item Una sección nueva con la exploración de la afluencia del Metro (Sección~\ref{sec:exploracion}):
+        perfil de las columnas, problemas de calidad, figura, índice $2019 = 100$ y afluencia por línea.
+\end{itemize}
+\textbf{Resultado:} sin contar los cierres de las Líneas~1 y 12, la afluencia de 2025 equivale al
+83.2\,\% de la de 2019; con ellos, al 78.7\,\%. Ninguna línea ha recuperado su nivel previo a la
+pandemia.
+
+\subsection{2026-09-26 --- Selección de conjuntos de datos}
+\textbf{Objetivo:} reducir el inventario de 29 fuentes a un conjunto manejable que responda la pregunta.\\
+\textbf{Procedimiento:} se aplicaron cuatro criterios: línea base anterior a 2020, cobertura hasta
+2024--2025, granularidad mensual o más fina, y descarga sin registro. Se revisaron los encabezados
+de los CSV de los candidatos directamente en el portal.\\
+\textbf{Resultado:} se seleccionaron 14 conjuntos (Tabla~\ref{tab:seleccion}); el resto quedó como opcional.
+La revisión de los encabezados mostró que:
+\begin{itemize}
+  \item La ocupación hotelera empieza en octubre de 2018, por lo que su línea base es corta.
+  \item El Metrobús tiene una serie simple desde 2005 y una desglosada por tipo de pago desde 2021.
+  \item Ecobici ofrece dos formatos: diario por género y horario por rango de edad (desde 2010).
+  \item La serie de casos COVID de la CDMX empieza el 5 de marzo de 2020.
+\end{itemize}
+
+\subsection{2026-09-26 --- Descarga de los conjuntos seleccionados}
+\textbf{Objetivo:} obtener los 14 conjuntos seleccionados de forma reproducible y trazable.\\
+\textbf{Procedimiento:} se escribieron seis scripts de descarga (Sección~\ref{sec:descarga}). Se
+descargó primero el portal de la CDMX (unos 1.5~GB), luego INEGI y por último el IMSS, filtrado a
+la CDMX. Antes de descargar se consultó el tamaño de cada archivo.\\
+\textbf{Resultado:} se descargaron 13 de los 14 conjuntos; el SESNSP queda como descarga manual. Todo
+está registrado en \archivo{data/raw/MANIFEST.csv}. La cobertura real aparece en la Tabla~\ref{tab:cobertura}.\\
+\textbf{Observaciones / problemas:}
+\begin{itemize}
+  \item SharePoint (SESNSP) identifica el script como bot y devuelve una página de error. No se intentó
+        evadir el bloqueo; el archivo se descargará a mano.
+  \item El servidor del IMSS envía los archivos comprimidos y en codificaciones distintas según el año.
+        El script se ajustó para filtrar sobre bytes.
+  \item Los nombres de archivo perdían letras acentuadas (\archivo{metrob_s}). Se corrigió la
+        normalización y se renombraron los archivos en el MANIFEST.
+  \item Se encontró que la serie comparable de hechos de tránsito no cubre la pandemia. Se agregó la
+        serie ampliada.
+\end{itemize}
+
+\subsection{2026-09-26 --- Limpieza de las carpetas FGJ y del Metrobús}
+\textbf{Objetivo:} obtener las primeras dos fuentes limpias y listas para integrarse.\\
+\textbf{Procedimiento:}
+\begin{itemize}
+  \item Se creó el catálogo de alcaldías a partir del Marco Geoestadístico y funciones comunes de
+        normalización (\archivo{src/clean/catalogos.py}).
+  \item Se exploraron las columnas, las categorías, las fechas y los duplicados de la FGJ, y se leyeron
+        sus tres notas metodológicas.
+  \item Se definieron 22 grupos de delito estables (\archivo{grupos_delito.py}).
+  \item Se escribieron los scripts \archivo{fgj.py} y \archivo{metrobus.py} (Sección~\ref{sec:limpieza}).
+\end{itemize}
+\textbf{Resultado:}
+\begin{itemize}
+  \item FGJ: 1\,937\,812 carpetas limpias, el 97.5\,\% del original.
+  \item Metrobús: 7 líneas unificadas y 2 errores anulados.
+  \item Aparecen primeros indicios a favor de H1 y H2, y un contraste Metro--Metrobús no previsto.
+\end{itemize}
+\textbf{Observaciones / problemas:}
+\begin{itemize}
+  \item La FGJ no publica un identificador de carpeta, así que los duplicados no se pueden confirmar;
+        se marcaron en vez de borrarse.
+  \item El robo a transeúnte ya bajaba antes de 2020, así que el análisis tendrá que controlar la
+        tendencia previa.
+  \item El Metrobús publicó 57 valores con decimales en 2025, probablemente estimaciones.
+\end{itemize}
+
+\subsection{2026-09-26 --- Fin de la descarga del IMSS}
+\textbf{Resultado:} se descargaron 128 meses, de enero de 2016 a agosto de 2026. Se conservaron solo
+las filas de la CDMX (entre 430 y 550 mil por mes, de 3.6 a 4.7 millones nacionales). El total
+ocupa 717~MB comprimidos, frente a unos 45~GB de los archivos nacionales completos.\\
+\textbf{Observaciones / problemas:} la descarga se detuvo en enero de 2025 por una línea mal formada
+(con menos columnas) en el archivo del IMSS. El script se ajustó para omitir y contar ese tipo de
+líneas, y la descarga se reanudó desde ese mes. En total se omitió 1 línea.
+
+\subsection{2026-09-26 --- Notebook de limpieza}
+\textbf{Objetivo:} mostrar en un notebook los datos limpios y las decisiones de limpieza.\\
+\textbf{Procedimiento:} se inició el notebook \archivo{notebooks/01_limpieza_datasets.ipynb}. Primero
+se trabajó el semáforo: se filtró la CDMX, se pasó a formato largo y se guardó en
+\archivo{data/interim/semaforo_cdmx_semana.csv}. Después se agregaron secciones con los resultados de
+los scripts de limpieza de la FGJ y del Metrobús. Cada sección incluye el reporte de pasos, la carga de
+los CSV limpios, la revisión de faltantes y gráficas.\\
+\textbf{Observaciones:} al revisar el semáforo en formato largo se encontró que, además de la semana
+2022-W01, falta la 2020-W53 (2020 tuvo 53 semanas ISO). La revisión con \archivo{isna()} daba cero
+vacíos porque las semanas faltantes no aparecen como filas. Se detectaron comparando contra el
+calendario completo de semanas.
+
+\subsection{2026-09-26 --- Publicación del proyecto en GitHub}
+\textbf{Problema:} el primer commit incluía todos los datos crudos (3~GB) y seis archivos de más de
+100~MB, así que GitHub rechazaba el envío.\\
+\textbf{Solución:} se agregó un \archivo{.gitignore} que excluye \archivo{data/raw/} y la base de
+carpetas de la FGJ a nivel de registro (495~MB). Se versionan el código, los notebooks, el informe, el
+\archivo{MANIFEST.csv} y los datos limpios agregados. El commit quedó en 6~MB. Los datos excluidos se
+regeneran con los scripts de descarga y limpieza, y el MANIFEST permite verificar con SHA-256 que son
+idénticos a los originales. Las instrucciones están en el \archivo{README.md}.

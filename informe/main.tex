@@ -1,0 +1,77 @@
+\documentclass[11pt,letterpaper]{article}
+
+% --- Idioma y codificación ---
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish,es-noshorthands,es-tabla]{babel}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{csquotes}
+
+% --- Página ---
+\usepackage[margin=2.3cm]{geometry}
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small Minería de datos --- CDMX y COVID-19}
+\fancyhead[R]{\small Fase 1: recolección y limpieza}
+\fancyfoot[C]{\thepage}
+
+% --- Tablas y listas ---
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{tabularx}
+\usepackage{enumitem}
+\setlist{nosep,leftmargin=*}
+\usepackage{pifont}
+\newcommand{\ok}{\ding{51}}          % verificado
+\newcommand{\pend}{\ding{109}}       % pendiente de verificar
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+
+% --- Colores, enlaces ---
+\usepackage[table]{xcolor}
+\definecolor{azul}{RGB}{31,78,121}
+\usepackage[hidelinks]{hyperref}
+\hypersetup{colorlinks=true,linkcolor=azul,urlcolor=azul}
+\usepackage{xurl}
+\usepackage{graphicx}
+\usepackage{amsmath}
+
+% --- Código / nombres de archivo ---
+\newcommand{\archivo}[1]{\texttt{\detokenize{#1}}}
+
+\title{\textbf{Cambios en movilidad, seguridad y actividad económica\\
+de la Ciudad de México antes, durante y después del COVID-19}\\[0.5em]
+\large Proyecto de minería de datos --- Fase 1: recolección y limpieza de datos}
+\author{Nombre del alumno(a)\\ \small Materia --- Institución}
+\date{\today}
+
+\begin{document}
+\maketitle
+\thispagestyle{empty}
+
+\begin{abstract}
+Este documento reúne el trabajo de la primera fase del proyecto: la definición del problema,
+la identificación de fuentes de datos abiertos, los criterios de limpieza e integración y
+la bitácora de actividades. El objetivo de la fase es construir una base de datos integrada,
+limpia y documentada sobre movilidad, seguridad y actividad económica en la Ciudad de México
+para el periodo 2016--2026. Esa base será el insumo de un modelo predictivo en la fase siguiente.
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+\input{secciones/01_problema}
+\input{secciones/02_fuentes}
+\input{secciones/03_metodologia}
+\input{secciones/035_exploracion_metro}
+\input{secciones/036_descarga}
+\input{secciones/037_limpieza}
+\input{secciones/04_bitacora}
+\input{secciones/05_pendientes}
+
+\appendix
+\input{secciones/A_enlaces}
+
+\end{document}

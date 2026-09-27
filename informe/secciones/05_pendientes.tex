@@ -1,0 +1,56 @@
+\section{Plan de trabajo y actividades pendientes}\label{sec:pendientes}
+
+\newcommand{\hecho}{\ding{51}}
+\newcommand{\falta}{\ding{113}}
+
+\subsection{Preparación}
+\begin{itemize}[label={}]
+  \item \hecho{} Definir la pregunta y el problema.
+  \item \hecho{} Identificar las fuentes de información.
+  \item \hecho{} Crear el entorno de Python (\archivo{.venv}) y el notebook de contexto (\archivo{notebooks/00_contexto_y_datasets.ipynb}).
+  \item \falta{} Completar la estructura de carpetas (\archivo{src/}, \archivo{docs/}, \archivo{data/interim/}, \archivo{data/processed/}).
+  \item \falta{} Crear el control de versiones y el archivo \archivo{data/raw/MANIFEST.csv}.
+  \item \falta{} Confirmar los cortes de los periodos de análisis.
+\end{itemize}
+
+\subsection{Descarga (14 conjuntos seleccionados)}
+\begin{itemize}[label={}]
+  \item \hecho{} Seleccionar los conjuntos de datos (Tabla~\ref{tab:seleccion}).
+  \item \hecho{} Scripts de descarga con MANIFEST (Sección~\ref{sec:descarga}).
+  \item \hecho{} Movilidad: Metro, Metrobús, Ecobici, hechos de tránsito (comparable, ampliada y 2024).
+  \item \hecho{} Seguridad: carpetas FGJ 2016--2024, llamadas al 911 2019--2022.
+  \item \falta{} Seguridad: SESNSP municipal (descarga manual).
+  \item \hecho{} Economía: DENUE, ocupación hotelera, ENOE (35 trimestres), IMSS (128 meses).
+  \item \hecho{} Pandemia y referencia: casos COVID, semáforo federal, Censo 2020, Marco Geoestadístico.
+\end{itemize}
+
+\subsection{Tareas surgidas en la descarga}
+\begin{itemize}[label={}]
+  \item \falta{} Unificar los formatos de fecha del 911 y revisar los traslapes entre semestres.
+  \item \falta{} Documentar el cambio de registro de los hechos de tránsito (2021--2022).
+  \item \falta{} Fijar la ventana post-pandemia común (2023-01 -- 2024-07).
+  \item \falta{} Rellenar las semanas 2020-W53 y 2022-W01 del semáforo.
+\end{itemize}
+
+\subsection{Exploración}
+\begin{itemize}[label={}]
+  \item \falta{} Obtener el perfil de cada conjunto: filas, columnas, rango de fechas, \% de nulos, tipos y categorías.
+  \item \falta{} Documentar los cambios metodológicos de cada fuente.
+\end{itemize}
+
+\subsection{Limpieza}
+\begin{itemize}[label={}]
+  \item \hecho{} Catálogo de alcaldías (clave INEGI y polígonos) y normalización de texto.
+  \item \hecho{} Carpetas FGJ: fechas, alcaldías, 22 grupos de delito, duplicados marcados.
+  \item \hecho{} Metrobús: líneas unificadas, atípicos revisados, errores anulados.
+  \item \falta{} Metro: pasar a script y marcar los cierres de las Líneas 1 y 12.
+  \item \falta{} Ecobici, hechos de tránsito, 911, IMSS, ENOE, DENUE, hoteles, COVID, semáforo, Censo.
+\end{itemize}
+
+\subsection{Integración y entrega}
+\begin{itemize}[label={}]
+  \item \falta{} Construir las bases \archivo{cdmx\_mensual\_alcaldia} y \archivo{cdmx\_semanal}.
+  \item \falta{} Calcular las tasas y los índices, y añadir las variables de periodo y semáforo.
+  \item \falta{} Validar contra las cifras oficiales y elaborar el diccionario de datos.
+  \item \falta{} Hacer un análisis descriptivo con gráficas antes, durante y después de la pandemia.
+\end{itemize}

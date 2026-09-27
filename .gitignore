@@ -1,0 +1,28 @@
+# --- Datos crudos: 3 GB, se regeneran con src/download/ (ver README) ---
+data/raw/*
+# ...excepto la prueba de qué se descargó
+!data/raw/MANIFEST.csv
+
+# --- Datos limpios demasiado grandes para GitHub (límite 100 MB por archivo) ---
+# Se regeneran con: .venv/bin/python -m src.clean.fgj
+data/interim/fgj_carpetas.csv
+data/interim/fgj_carpetas.parquet
+
+# --- Entorno y archivos generados automáticamente ---
+.venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+*.lock
+.~lock.*#
+
+# --- Archivos auxiliares de LaTeX (el PDF sí se sube) ---
+informe/*.aux
+informe/*.log
+informe/*.out
+informe/*.toc
+informe/*.fls
+informe/*.fdb_latexmk
+informe/*.synctex.gz
+informe/*.lot
+informe/*.lof

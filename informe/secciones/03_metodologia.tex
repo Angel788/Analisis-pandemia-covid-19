@@ -1,0 +1,53 @@
+\section{Metodología de recolección y limpieza}\label{sec:metodologia}
+
+\subsection{Organización del proyecto}
+Los datos se organizan en tres niveles. Así, los archivos originales nunca se modifican y cada
+transformación puede reproducirse:
+\begin{center}
+\begin{tabular}{ll}
+\toprule
+\textbf{Carpeta} & \textbf{Contenido}\\
+\midrule
+\archivo{data/raw/}       & Descargas originales, sin modificar \\
+\archivo{data/interim/}   & Datos limpios por fuente (CSV y Parquet)\\
+\archivo{data/processed/} & Base integrada (alcaldía × mes, CDMX × semana)\\
+\archivo{docs/}           & Diccionarios de datos y notas metodológicas\\
+\archivo{src/download/}   & Un script de descarga por fuente\\
+\archivo{src/clean/}      & Un script de limpieza por fuente\\
+\archivo{notebooks/}      & Análisis exploratorio\\
+\archivo{informe/}        & Este documento\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Criterios de limpieza}
+Estos criterios aplican a todas las fuentes:
+\begin{enumerate}
+  \item \textbf{Codificación.} Todos los archivos se convierten a UTF-8. Por ejemplo, el CSV del Metro
+        presenta texto mal codificado (\emph{mojibake}): \texttt{Isabel la CatÃ³lica} en lugar de
+        \enquote{Isabel la Católica}.
+  \item \textbf{Fechas.} Se convierten al formato ISO~8601. En las carpetas de la FGJ hay que decidir
+        explícitamente si se usa la fecha del hecho o la fecha de inicio de la carpeta.
+  \item \textbf{Alcaldías.} Se crea un catálogo único con la clave INEGI (\archivo{09002}--\archivo{09017}).
+        Se normalizan acentos, mayúsculas y nombres anteriores (\enquote{Delegación}).
+  \item \textbf{Estaciones y líneas.} Se crea un catálogo único y se documentan los cierres prolongados:
+        la Línea~12 desde el 3 de mayo de 2021 y la Línea~1 por su modernización desde julio de 2022.
+  \item \textbf{Faltantes y ceros.} Se distingue un día \enquote{sin servicio} (cierre) de un \enquote{dato faltante}.
+  \item \textbf{Duplicados y registros fuera del dominio.} Se eliminan los duplicados y las carpetas
+        con coordenadas fuera del polígono de la CDMX.
+  \item \textbf{Catálogo de delitos.} Los delitos se agrupan en categorías estables (alto impacto,
+        patrimonial, violencia familiar, etc.) que no cambien con las reclasificaciones de la FGJ.
+  \item \textbf{Agregación.} Toda serie se entrega también a nivel alcaldía × mes y CDMX × semana.
+  \item \textbf{Trazabilidad.} De cada archivo descargado se registran la URL, la fecha de descarga
+        y el hash SHA-256 en \archivo{data/raw/MANIFEST.csv}.
+\end{enumerate}
+
+\subsection{Integración}
+Las llaves comunes son la \textbf{fecha} (día, semana o mes) y la \textbf{clave de alcaldía}.
+Cada fuente limpia se agrega a esas llaves y después se unen todas. Para comparar series con escalas
+distintas se calculan dos indicadores:
+\begin{itemize}
+  \item \textbf{Tasas por cada 100 mil habitantes}, para los delitos.
+  \item \textbf{Índices base 100}, donde 100 es el promedio de 2019. Así se mide la caída y la
+        recuperación en términos relativos.
+\end{itemize}

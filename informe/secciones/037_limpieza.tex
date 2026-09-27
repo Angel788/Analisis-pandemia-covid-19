@@ -1,0 +1,139 @@
+\section{Limpieza de datos}\label{sec:limpieza}
+
+Cada fuente se limpia con su propio script en \archivo{src/clean/}. Todos leen de
+\archivo{data/raw/} sin modificar los originales y escriben en \archivo{data/interim/} en dos
+formatos: CSV, el principal, que se abre en Excel y en cualquier programa, y Parquet, un respaldo más
+ligero que conserva los tipos de dato. La base de carpetas de la FGJ tiene 1.9 millones de filas, más de
+las 1\,048\,576 que admite Excel, por lo que se trabaja con pandas o con su versión agregada. Cada script genera además un reporte en \archivo{docs/limpieza_<fuente>.md}, con el número
+de registros afectados en cada paso.
+
+\subsection{Catálogos comunes}
+El módulo \archivo{catalogos.py} concentra lo que comparten todas las fuentes:
+\begin{itemize}
+  \item \textbf{Catálogo de alcaldías.} Las 16 alcaldías con su clave INEGI (\archivo{09002} a
+        \archivo{09017}) y sus polígonos, leídos directamente del Marco Geoestadístico 2020.
+  \item \textbf{Normalización de texto.} Repara el \emph{mojibake}, quita acentos, pasa a
+        mayúsculas y elimina espacios repetidos. Así \enquote{Álvaro Obregón}, \enquote{ALVARO OBREGON}
+        y su versión mal codificada se reconocen como la misma alcaldía.
+  \item \textbf{Asignación por coordenadas.} Ubica la alcaldía de un punto (latitud, longitud)
+        mediante una prueba de punto en polígono.
+\end{itemize}
+
+\subsection{Carpetas de investigación (FGJ)}
+
+\paragraph{Decisiones principales.}
+\begin{enumerate}
+  \item \textbf{Fecha del hecho, no de inicio.} Cada archivo anual contiene las carpetas
+        \emph{iniciadas} ese año, que pueden referirse a hechos anteriores. Para medir cuándo ocurren
+        los delitos se usa \archivo{fecha_hecho}. La mediana del retraso entre el hecho y la denuncia
+        es de 1 día, pero el percentil 90 es de 70 días.
+  \item \textbf{Ventana 2016 -- julio de 2024.} Se descartan los hechos anteriores a 2016: solo
+        aparecen si se denunciaron desde 2016, así que su registro está incompleto. Por la misma razón,
+        junio y julio de 2024 se marcan como \emph{meses incompletos}, porque todavía faltan las
+        denuncias tardías.
+  \item \textbf{Alcaldía.} Se toma de \archivo{alcaldia_hecho}. Coincide con la alcaldía calculada por
+        coordenadas en el 99.7\,\% de los casos. Los registros \enquote{CDMX (indeterminada)} no
+        traen coordenadas, así que se conservan para el total de la ciudad con la clave \archivo{09000}.
+  \item \textbf{Duplicados.} El archivo no trae un identificador de carpeta. Las 3\,824 filas
+        idénticas en las 21 columnas (0.19\,\%) tienen hora de inicio vacía y son sobre todo fraude y
+        abuso de confianza, lo que sugiere denuncias múltiples de un mismo hecho. Se \emph{marcan} en
+        lugar de borrarse, y el conteo agregado las excluye.
+  \item \textbf{Grupos de delito estables.} Los 352 delitos distintos se agrupan en 22 categorías
+        mediante palabras clave, no por nombre exacto. Así, los cambios de denominación del catálogo
+        de 2019 (nota de reclasificación de la FGJ) no rompen las series. Solo el 7\,\% queda en
+        \enquote{otros}, y las 16 categorías de alto impacto de la FGJ caen cada una en un único grupo.
+\end{enumerate}
+
+\begin{table}[h]
+\centering
+\caption{Pasos de limpieza de las carpetas de la FGJ.}\label{tab:limpieza_fgj}
+\small
+\begin{tabular}{lrl}
+\toprule
+\textbf{Paso} & \textbf{Registros} & \textbf{Acción}\\
+\midrule
+Registros leídos (9 archivos) & 1\,987\,424 & ---\\
+Idénticos en las 21 columnas & 3\,824 & se marcan\\
+Sin fecha del hecho & 545 & se descartan\\
+Hecho anterior a 2016 & 32\,223 & se descartan\\
+Hecho posterior al inicio de la carpeta & 110 & se descartan\\
+Hecho fuera de la CDMX & 16\,734 & se descartan\\
+En la CDMX sin alcaldía identificable & 18\,595 & se conservan (clave 09000)\\
+Hechos no delictivos & 66\,960 & se marcan\\
+Últimos 2 meses (subregistro) & 30\,814 & se marcan\\
+\midrule
+\textbf{Base limpia} & \textbf{1\,937\,812} & 97.5\,\% del original\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Salidas.} \archivo{fgj_carpetas.parquet}, con una fila por carpeta, y
+\archivo{fgj_alcaldia_mes.parquet}, con los conteos por alcaldía, mes y grupo de delito
+(34\,683 filas).
+
+\paragraph{Primeros resultados.} La Figura~\ref{fig:fgj_grupos} muestra tres grupos con
+comportamientos distintos:
+\begin{itemize}
+  \item \textbf{Robo a transeúnte:} cayó con el confinamiento y no se ha recuperado (18\,528
+        carpetas en 2019, 12\,306 en 2020 y 10\,682 en 2023). Sin embargo, \emph{ya venía bajando
+        desde finales de 2018}, así que no toda la caída puede atribuirse a la pandemia.
+  \item \textbf{Violencia familiar:} bajó en abril de 2020, probablemente porque el confinamiento
+        dificultó denunciar, y después subió con fuerza (25\,802 en 2019, 28\,340 en 2020 y 37\,310
+        en 2023). Esto es consistente con la hipótesis H2.
+  \item \textbf{Robo en transporte público:} cayó a menos de la mitad y se estabilizó en ese nivel,
+        igual que la afluencia del Metro.
+\end{itemize}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=\textwidth]{figuras/fgj_grupos_mes.png}
+\caption{Carpetas mensuales por grupo de delito (sin los meses incompletos). Fuente: elaboración
+propia con datos de la FGJ.}\label{fig:fgj_grupos}
+\end{figure}
+
+\subsection{Afluencia del Metrobús}
+
+\begin{table}[h]
+\centering
+\caption{Pasos de limpieza del Metrobús.}\label{tab:limpieza_mb}
+\small
+\begin{tabular}{L{8.5cm}L{5.5cm}}
+\toprule
+\textbf{Paso} & \textbf{Resultado}\\
+\midrule
+Registros leídos (fecha × línea) & 53\,732\\
+Nombres de línea (\archivo{Línea N} / \archivo{linea N} en 2023) & 14 $\rightarrow$ 7 unificados\\
+Vacíos antes de la inauguración de cada línea & 17\,227; no son faltantes, se marcan\\
+Faltantes con la línea operando & 0\\
+Duplicados fecha × línea & 0\\
+Días atípicos respecto a la mediana móvil de 29 días & 30; se conservan (eventos reales)\\
+Errores evidentes & 2; se anulan\\
+Valores con decimales (Línea~4, ene--feb 2025) & 57; se redondean y se marcan como estimados\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Valores atípicos.} Se compararon con la mediana móvil de 29 días de la misma línea.
+Casi todos los días bajos corresponden a hechos reales: domingos, 1 de enero, el día posterior al
+sismo del 19-S de 2017, la jornada electoral de 2018, la visita papal de 2016 y los desfiles del 16
+de septiembre. Esos se conservan. Solo se anularon dos errores evidentes:
+\begin{itemize}
+  \item 26 de julio de 2005, Línea~1: 3.03 millones de viajes, unas 13 veces un día normal.
+        Probablemente es el acumulado desde la inauguración.
+  \item 20 de septiembre de 2017, Línea~2: 9 pasajeros.
+\end{itemize}
+
+\paragraph{Metro frente a Metrobús.} Ambos sistemas cayeron casi lo mismo en mayo de 2020: el Metro
+a un índice de 26.5 y el Metrobús a 24.2, con 2019 = 100. Sin embargo, su recuperación fue muy
+distinta (Figura~\ref{fig:metro_mb}). El Metrobús superó su nivel de 2019 a partir de la segunda mitad
+de 2022 y en 2024 alcanzó un promedio anual de 118.9. El Metro, en cambio, se ha quedado entre 73 y 79
+(promedios anuales de 2024 y 2025). Esto puede deberse a la ampliación de la
+red del Metrobús y al traslado de usuarios por los cierres de las Líneas~1 y 12 del Metro. Es una
+pregunta que conviene responder en la fase de análisis.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=\textwidth]{figuras/metro_vs_metrobus.png}
+\caption{Afluencia diaria promedio mensual del Metro y del Metrobús, índice 2019 = 100. Fuente:
+elaboración propia con datos del STC Metro y del Metrobús.}\label{fig:metro_mb}
+\end{figure}

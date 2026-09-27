@@ -1,0 +1,121 @@
+\section{Definición del problema}\label{sec:problema}
+
+\subsection{Pregunta de investigación}
+\begin{quote}
+\itshape ¿Cómo cambiaron los patrones de movilidad, seguridad y actividad económica de la
+Ciudad de México durante la pandemia de COVID-19, y qué diferencias se observan en su
+recuperación posterior respecto al periodo previo a 2020?
+\end{quote}
+
+\subsection{Planteamiento}
+La pandemia de COVID-19 provocó un choque abrupto sobre la vida urbana de la Ciudad de México (CDMX).
+En México, el primer caso se confirmó el 28 de febrero de 2020 y la Jornada Nacional de Sana Distancia
+comenzó el 23 de marzo de 2020.
+
+Los datos para medir este choque existen, pero están \textbf{dispersos} entre distintas instituciones:
+Gobierno de la CDMX, Fiscalía General de Justicia (FGJ), Secretaría de Seguridad Ciudadana (SSC), C5,
+INEGI, IMSS y Secretaría de Salud. Además, tienen \textbf{granularidades distintas}. En el tiempo
+pueden ser diarios, mensuales o trimestrales. En el territorio pueden estar por estación, colonia,
+alcaldía o entidad. Sus formatos y calidades también varían. No existe una base integrada que permita
+comparar las tres dimensiones sobre un mismo eje temporal y territorial.
+
+\begin{table}[h]
+\centering
+\caption{Problemas de los datos disponibles.}
+\small
+\begin{tabular}{L{3cm}L{11cm}}
+\toprule
+\textbf{Problema} & \textbf{Ejemplo}\\
+\midrule
+Dispersión & Gobierno CDMX, FGJ, SSC, C5, INEGI, IMSS y Secretaría de Salud publican cada uno por separado.\\
+Granularidad distinta & Metro: diario por estación. Carpetas de la FGJ: por evento, con coordenadas. ITAEE: trimestral por entidad.\\
+Calidad heterogénea & Texto mal codificado, cambios de catálogo (PGJ $\rightarrow$ FGJ), cierres de líneas del Metro y series que empiezan en 2020.\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Qué se analizará}
+El análisis cubre tres dimensiones de la vida urbana, más una dimensión de control que mide la
+intensidad de la pandemia (Tabla~\ref{tab:dimensiones}).
+
+\begin{table}[h]
+\centering
+\caption{Dimensiones y variables del análisis.}\label{tab:dimensiones}
+\small
+\begin{tabular}{L{2.6cm}L{3.8cm}L{7.6cm}}
+\toprule
+\textbf{Dimensión} & \textbf{Qué se mide} & \textbf{Variables principales}\\
+\midrule
+Movilidad & Uso del transporte público y privado & Afluencia de Metro, Metrobús, STE, RTP y Ecobici; tránsito vehicular; hechos de tránsito\\
+Seguridad & Delitos denunciados, emergencias y percepción & Carpetas de investigación por tipo de delito, víctimas, llamadas al 911, percepción de inseguridad (ENSU)\\
+Actividad económica & Empleo y actividad productiva & Asegurados en el IMSS, ocupación y desocupación (ENOE), ITAEE, unidades económicas (DENUE), ocupación hotelera\\
+Pandemia (control) & Intensidad del COVID-19 & Casos, positividad, hospitalización, color del semáforo\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Objetivo de la fase}
+El problema a resolver en esta fase es \textbf{construir un conjunto de datos integrado, limpio y
+documentado} que permita:
+\begin{enumerate}
+  \item Medir la magnitud de la caída de cada dimensión en 2020.
+  \item Medir la velocidad y el nivel de recuperación: si se volvió a la línea base, cuándo, o si se
+        llegó a un nuevo equilibrio.
+  \item Relacionar las dimensiones entre sí y con la intensidad de la pandemia (casos, semáforo epidemiológico).
+  \item Servir de insumo a un modelo predictivo en la fase siguiente.
+\end{enumerate}
+
+\subsection{Periodos de análisis}
+\begin{table}[h]
+\centering
+\caption{Periodos propuestos. Los cortes pueden ajustarse con base en el semáforo epidemiológico de la CDMX.}
+\begin{tabular}{lll}
+\toprule
+\textbf{Periodo} & \textbf{Rango} & \textbf{Uso} \\
+\midrule
+Pre-pandemia (línea base) & 2016-01-01 -- 2020-02-29 & Tendencia y estacionalidad \enquote{normal} \\
+Confinamiento / choque    & 2020-03-01 -- 2021-06-30 & Caída; semáforo rojo/naranja \\
+Transición                & 2021-07-01 -- 2022-12-31 & Reapertura gradual, vacunación \\
+Post-pandemia             & 2023-01-01 -- último dato & Recuperación / \enquote{nueva normalidad} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Unidades de análisis}
+\begin{itemize}
+  \item \textbf{Temporal:} diaria donde exista. La base integrada se agregará a nivel \textbf{semanal y mensual}.
+  \item \textbf{Territorial:} la unidad común es la \textbf{alcaldía} (16). Se usará colonia o estación
+        solo cuando el dato lo permita.
+\end{itemize}
+
+\subsection{Variables objetivo candidatas (fase predictiva)}
+\begin{itemize}
+  \item Afluencia mensual total en transporte público (Metro + Metrobús + STE + RTP).
+  \item Delitos de alto impacto por alcaldía y mes.
+  \item Empleo formal (trabajadores asegurados en el IMSS) en la CDMX por mes.
+  \item Índice de recuperación: el valor observado entre el valor esperado sin pandemia. El valor
+        esperado es un contrafactual estimado con la tendencia anterior a 2020.
+\end{itemize}
+
+\subsection{Hipótesis de trabajo}
+\begin{description}
+  \item[H1.] La movilidad en transporte masivo cayó más del 50\,\% en abril--mayo de 2020 y no se
+             recuperó al mismo ritmo que el tránsito vehicular.
+  \item[H2.] Los delitos patrimoniales en vía pública (robo a transeúnte y en transporte) cayeron junto
+             con la movilidad. La violencia familiar no disminuyó, o incluso aumentó.
+  \item[H3.] El empleo formal se recuperó antes que la movilidad en transporte público, por el efecto
+             del teletrabajo.
+  \item[H4.] La recuperación fue desigual entre alcaldías centrales y periféricas.
+\end{description}
+
+\subsection{Alcance y limitaciones}
+\begin{itemize}
+  \item El modelado, la inferencia causal y los pronósticos quedan fuera de esta fase.
+  \item Las carpetas de investigación miden \emph{denuncias}, no delitos ocurridos. Según la ENVIPE,
+        la cifra negra ronda el 90\,\%. Por eso se complementan con las llamadas al 911 y con las encuestas ENVIPE y ENSU.
+  \item Algunas series creadas durante la pandemia (Google Mobility, índices de movilidad de la CDMX)
+        \textbf{no tienen línea base anterior a 2020}. Sirven para describir el periodo pandémico, pero
+        no para comparar antes y después.
+  \item Hubo cambios metodológicos. Por ejemplo, la PGJ se transformó en FGJ y algunos delitos se
+        reclasificaron. Estos cambios deben documentarse al unir las series.
+\end{itemize}
