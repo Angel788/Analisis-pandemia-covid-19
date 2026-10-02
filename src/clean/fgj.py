@@ -114,6 +114,7 @@ def agregar(d: pd.DataFrame) -> pd.DataFrame:
               .groupby(["cve_alcaldia", "mes", "grupo_delito", "dimension_delito"], observed=True)
               .size().rename("carpetas").reset_index())
     ag["mes_incompleto"] = ag.mes.isin(d.loc[d.mes_incompleto, "mes"].unique())
+    ag.insert(1, "alcaldia", nombre_alcaldia(ag.cve_alcaldia).fillna("CDMX (sin alcaldía)"))
     return ag
 
 

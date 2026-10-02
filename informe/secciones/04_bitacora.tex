@@ -187,3 +187,85 @@ carpetas de la FGJ a nivel de registro (495~MB). Se versionan el código, los no
 \archivo{MANIFEST.csv} y los datos limpios agregados. El commit quedó en 6~MB. Los datos excluidos se
 regeneran con los scripts de descarga y limpieza, y el MANIFEST permite verificar con SHA-256 que son
 idénticos a los originales. Las instrucciones están en el \archivo{README.md}.
+
+\subsection{2026-09-26 --- Limpieza del IMSS y criterios de imputación}
+\textbf{Procedimiento:} se revisó el diccionario oficial del IMSS. Se definieron las columnas que se
+conservan y la estructura de la tabla (mes por subdelegación). El código se escribió por pasos en el
+notebook 01 y se ejecutó ahí (Sección~\ref{sec:limpieza}).\\
+\textbf{Criterio de imputación:} se decidió imputar solo cuando el dato existió pero no se registró y
+el hueco es corto. Casos con regresión: el desempleo de la ENOE en 2020-T2 y el backcasting de la
+ocupación hotelera 2016--2018. Casos con métodos simples: el semáforo, dos días del Metrobús y los
+meses finales de la FGJ. No se imputan los huecos largos (911 y series que terminan en 2024) ni los
+datos que no existieron (cierres de líneas, personas sin empleo).\\
+\textbf{Observaciones:} el rango de UMA pierde utilidad desde 2023 por el aumento del salario mínimo;
+se usará el salario promedio deflactado.
+
+\subsection{2026-09-26 --- Selección final de ocho conjuntos}
+\textbf{Decisión:} se redujo la selección de 14 a 8 conjuntos (Sección~\ref{sec:seleccion_final}). Se
+eligieron los hechos de tránsito en lugar de Ecobici porque complementan las debilidades del Metro:
+tránsito vehicular y datos por alcaldía. Se descartaron el 911, la ENOE, el SESNSP y el DENUE por su
+costo de limpieza, su cobertura o su redundancia.\\
+\textbf{Revisión de la ocupación hotelera:} no tiene vacíos, meses faltantes ni valores fuera de rango
+entre octubre de 2018 y julio de 2024. Los valores de abril a junio de 2020 (1.6--3.4\,\%) son reales:
+corresponden al confinamiento. La precisión de los datos cambia desde febrero de 2020 (de 2 decimales
+a muchos), lo que sugiere un cambio en el método de cálculo de la fuente.
+
+\subsection{2026-09-26 --- Limpieza de la ocupación hotelera}
+\textbf{Procedimiento:} en el notebook 01 se revisaron los tres tipos de faltantes; no se encontró
+ninguno. Se redondearon los valores a dos decimales, se pasó la fecha al primer día del mes y se
+renombró la columna (Sección~\ref{sec:limpieza}).\\
+\textbf{Resultado:} \archivo{hoteles_mes.csv}, con 70 meses. Promedio de 67.7\,\% en 2019 y de
+63.6\,\% en 2023.
+
+\subsection{2026-09-26 --- Limpieza de los hechos de tránsito}
+\textbf{Procedimiento:} se revisaron los folios, los duplicados y los nombres de alcaldía antes de
+agregar. En el notebook 01 se unificaron las fechas, se unieron las dos series, se asignó la clave
+INEGI y se agregaron los datos por mes, alcaldía y tipo de accidente. Cada error encontrado se
+registró en una tabla dentro de la sección.\\
+\textbf{Resultado:} \archivo{transito_alcaldia_mes.csv}, con 8\,064 filas y 164\,706 accidentes.\\
+\textbf{Observaciones:} se agregó la errata \enquote{CUAHUTEMOC} al catálogo común de alcaldías
+(\archivo{src/clean/catalogos.py}).
+
+\subsection{2026-09-26 --- Visualización de hechos de tránsito y hoteles}
+\textbf{Procedimiento:} se agregaron al notebook 01 cuatro gráficas de los hechos de tránsito (tipos
+por mes, peatones y ciclistas, mapa de calor por alcaldía y fallecidos por año) y se guardó la de
+ocupación hotelera. Las cinco se incorporaron al informe.\\
+\textbf{Problemas detectados al graficar:} un corte de registro en las caídas de ciclista en febrero
+de 2020, previo al confinamiento, y un registro incompleto en el primer semestre de 2018. Ambos se
+agregaron a la tabla de errores del notebook. Se corrigió una interpretación preliminar que atribuía
+el aumento de las caídas de ciclista a un mayor uso de la bicicleta.
+
+\subsection{2026-09-27 --- Limpieza de la afluencia del Metro}
+\textbf{Objetivo:} dejar lista la serie principal de movilidad y separar el efecto de la pandemia del
+de los cierres de líneas.\\
+\textbf{Procedimiento:} primero se exploró la afluencia por año con los datos crudos. Después, en el
+notebook 01 se repararon la codificación y los nombres de línea y de estación, se corrigió el duplicado
+de Oceanía, se validó el calendario y se clasificaron los ceros en cuatro estados. Luego se revisaron
+los atípicos y se marcaron los cierres de las Líneas~1 y 12. Cada error quedó en una tabla al final de
+la sección (Tabla~\ref{tab:limpieza_metro}).\\
+\textbf{Resultado:} \archivo{metro_linea_dia}, \archivo{metro_estacion_mes} y \archivo{metro_mes} en
+\archivo{data/interim/}, y tres gráficas.\\
+\textbf{Observaciones:} la suma anual con los datos crudos no permite comparar años, porque 2017
+pierde 8 días sin conteo (19-S) y 2026 solo llega a julio. Se usa el promedio diario. Sin las
+Líneas~1 y 12, el Metro solo recuperó el 83\,\% de 2019.
+
+\subsection{2026-09-27 --- Tabla diaria de hechos de tránsito}
+\textbf{Objetivo:} tener los hechos de tránsito también por día, por si el análisis lo requiere.\\
+\textbf{Procedimiento:} en el notebook 01 se agregaron los accidentes limpios por día, alcaldía y
+tipo sobre la cuadrícula completa, con 0 donde no hubo accidentes. Igual que con el Metro, se revisó
+el total diario contra su mediana móvil.\\
+\textbf{Resultado:} \archivo{transito_alcaldia_dia} (245\,472 filas), que cuadra mes por mes con la
+tabla mensual.\\
+\textbf{Observaciones:} no falta ningún día, pero siete días tienen un registro anormalmente bajo;
+se marcaron con \archivo{registro\_bajo} y se agregaron a la tabla de errores.
+
+\subsection{2026-09-27 --- Nombre de alcaldía en la FGJ y limpieza de casos COVID}
+\textbf{Procedimiento:} se modificó \archivo{src/clean/fgj.py} para que la tabla
+\archivo{fgj_alcaldia_mes} incluya el nombre de la alcaldía además de la clave, y se volvió a
+ejecutar. Se verificó que el resto de la tabla no cambió. Después se limpiaron los casos positivos de
+COVID-19 en el notebook 01: se completó el calendario, se revisó la consistencia entre columnas, se
+analizó el efecto del día de la semana y se generaron las tablas diaria, semanal y mensual.\\
+\textbf{Resultado:} \archivo{covid_dia}, \archivo{covid_semana} y \archivo{covid_mes}, con
+1\,617\,973 positivos de residentes, y la gráfica semanal.\\
+\textbf{Observaciones:} solo se encontró una fila inconsistente. La semana de los casos usa la misma
+clave ISO que el semáforo, así que ambas fuentes se pueden unir directamente.

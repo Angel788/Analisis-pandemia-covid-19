@@ -41,7 +41,7 @@ El problema a resolver en esta fase es **construir un dataset integrado, limpio 
 - H1: La movilidad en transporte masivo cayó más de 50 % en abril–mayo 2020 y **no** recuperó el nivel previo al mismo ritmo que el tránsito vehicular.
 - H2: Los delitos patrimoniales en vía pública (robo a transeúnte, en transporte) cayeron junto con la movilidad; la violencia familiar no bajó (o subió).
 - H3: El empleo formal se recuperó antes que la movilidad en transporte público (efecto teletrabajo).
-- H4: La recuperación fue desigual entre alcaldías (centrales vs. periféricas).
+- H4: La recuperación fue desigual entre alcaldías (centrales vs. periféricas). *Con la selección final solo se evalúa en seguridad (FGJ) y seguridad vial (hechos de tránsito).*
 
 ### 2.6 Alcance y limitaciones
 - Fuera de alcance en esta fase: modelado, inferencia causal, pronósticos.
@@ -54,7 +54,27 @@ El problema a resolver en esta fase es **construir un dataset integrado, limpio 
 
 ## 3. Fuentes de información
 
-### 3.0 Selección de datasets (decisión del 26-sep-2026)
+### 3.0.0 Selección FINAL (decisión del 26-sep-2026, reemplaza a la de 14)
+Se redujo a **8 datasets** para que la fase sea manejable: 6 principales + 2 de control. Ecobici se cambió por los hechos de tránsito porque estos complementan las debilidades del Metro: miden el tránsito vehicular (la otra mitad de H1) y tienen datos por alcaldía.
+
+| Dimensión | Dataset | Rol | Estado de limpieza |
+|---|---|---|---|
+| Movilidad | Metro | Principal | ✅ notebook 01 → `metro_linea_dia`, `metro_estacion_mes`, `metro_mes` (cierres L1/L12 marcados) |
+| Movilidad | Metrobús | Principal | ✅ `src/clean/metrobus.py` |
+| Movilidad | Hechos de tránsito SSC (ampliada + 2024) | Principal; complementa al Metro | ✅ notebook 01 → `transito_alcaldia_mes.csv` y `transito_alcaldia_dia.csv` |
+| Seguridad | Carpetas FGJ | Principal | ✅ `src/clean/fgj.py` |
+| Economía | IMSS (puestos de trabajo) | Principal | ✅ notebook 01 |
+| Economía | Ocupación hotelera | Principal | ✅ notebook 01 → `hoteles_mes.csv` (falta backcasting 2016–2018) |
+| Pandemia | Casos COVID CDMX | Control | ✅ notebook 01 → `covid_dia`, `covid_semana`, `covid_mes` |
+| Pandemia | Semáforo federal | Control | 🟡 faltan 2020-W53 y 2022-W01 |
+
+**Descartados:** Ecobici (termina en 2024-07 y cambió de sistema en 2022), 911 (no llega al post-pandemia y es el más costoso de limpiar), ENOE (microdatos nacionales; el IMSS ya cubre el empleo), SESNSP (solo validaba a la FGJ y requería descarga manual) y DENUE. Sus archivos siguen en `data/raw/` por si se retoman.
+
+**Consecuencias:**
+- **H4 (alcaldías)** solo se puede evaluar con la FGJ y los hechos de tránsito; queda acotada a seguridad y seguridad vial (el IMSS no tiene alcaldías y se descartó el DENUE).
+- La imputación con regresión de la ENOE 2020-T2 ya no aplica; el ejemplo de regresión será el **backcasting de la ocupación hotelera** (2016 → 2018-09) con el empleo IMSS.
+
+### 3.0 Selección de datasets (primera selección, sustituida por §3.0.0) (decisión del 26-sep-2026)
 De las 29 fuentes identificadas se seleccionaron **14**. Criterios: que tengan datos **antes de 2020** (línea base), que lleguen **hasta 2024–2025**, que sean **mensuales o más finas** (idealmente por alcaldía) y que se puedan **descargar sin registro**. El resto queda como **opcional**, por si hace falta ampliar.
 
 | # | Dimensión | Dataset seleccionado | Granularidad | Desde | Aporta |
@@ -165,13 +185,24 @@ Cada salida se guarda en **CSV** (UTF-8 con BOM, abre bien en Excel) y en **Parq
 
 | Fuente | Script | Salida en `data/interim/` | Resultado |
 |---|---|---|---|
-| FGJ | `src/clean/fgj.py` | `fgj_carpetas`, `fgj_alcaldia_mes` (.csv y .parquet) | 1,937,812 carpetas limpias (97.5 %); 22 grupos de delito; 16 alcaldías + "09000" (CDMX sin alcaldía) |
+| FGJ | `src/clean/fgj.py` | `fgj_carpetas`, `fgj_alcaldia_mes` (.csv y .parquet) | 1,937,812 carpetas limpias (97.5 %); 22 grupos de delito; 16 alcaldías + "09000" (CDMX sin alcaldía). `fgj_alcaldia_mes` trae clave **y nombre** de alcaldía (`alcaldia`; "CDMX (sin alcaldía)" para 09000) desde el 27-sep-2026 |
+| Casos COVID | notebook `01_limpieza_datasets.ipynb` | `covid_dia` (1,130), `covid_semana` (162, semana ISO como el semáforo), `covid_mes` (38) (.csv y .parquet) | 17 días de mar-2020 sin fila → 0 (`dia_agregado`); antes del 5-abr-2020 < 70 pruebas/día (`arranque`); 29-mar-2020 residentes (6) > total (5) → total = 6; tasas recalculadas con sumas; promedio móvil de 7 días (domingo ≈ ¼ de las pruebas); semana 2023-W14 y mes 2023-04 incompletos. Usar los de **residentes** (`_cdmx`) |
 | Semáforo | notebook `01_limpieza_datasets.ipynb` | `semaforo_cdmx_semana.csv` | En proceso: CDMX en formato largo; faltan rellenar 2020-W53 y 2022-W01 |
+| IMSS | notebook `01_limpieza_datasets.ipynb` (código por pasos) | `imss_subdelegacion_mes.csv` | 1,280 filas (128 meses × 10 subdelegaciones); puestos, hombres/mujeres, permanentes/eventuales, 3 rangos UMA + sin dato, salario promedio. ⚠️ Fecha guardada como dd/mm/aaaa: leer con `format="%d/%m/%Y"` |
+| Hechos de tránsito | notebook `01_limpieza_datasets.ipynb` | `transito_alcaldia_mes.csv` | 8,064 filas = 84 meses (2018–2024) × 16 alcaldías × 6 tipos; total, lesionados y fallecidos; meses sin accidentes = 0. 164,706 accidentes tras quitar 28 duplicados. Tabla de errores al final de la sección. **Versión diaria** `transito_alcaldia_dia` (.csv y .parquet): 245,472 filas = 2,557 días × 16 × 6, cuadra mes a mes con la mensual; ningún día sin registro, pero 7 días con < 40 % de lo normal (p. ej. 7-may-2018 con 4 y 26-jun-2023 con 10) marcados con `registro_bajo` |
+| Ocupación hotelera | notebook `01_limpieza_datasets.ipynb` | `hoteles_mes.csv` | 70 meses (2018-10 → 2024-07); redondeo a 2 decimales (47 valores traían más), fecha al día 1 del mes, columna `ocupacion_pct`. Promedio 2019 = 67.7 %, mínimo 1.55 % (2020-05), 2023 = 63.6 % |
 | Metrobús | `src/clean/metrobus.py` | `metrobus_linea_dia`, `metrobus_mes` (.csv y .parquet) | 7 líneas unificadas; 2 errores anulados; 57 valores estimados marcados |
+| Metro | notebook `01_limpieza_datasets.ipynb` (código por pasos) | `metro_linea_dia` (71,633), `metro_estacion_mes` (38,125), `metro_mes` (199) (.csv y .parquet) | Mojibake reparado; 24 → 12 líneas (`Línea N`); 2 estaciones con doble escritura desde 2023-06; 31 registros "Oceanía" duplicados (L. B, dic-2020) reasignados a Deportivo Oceanía; columna `estado`: `abierta` / `cerrada` (39,667, 0 real) / `no_existia` (L12 antes de nov-2012, vacío) / `sin_registro` (10 días de servicio gratuito: 16–17 mar 2016 y 20–27 sep 2017, vacío). La estación × día (1.18 M filas) no se guarda: supera el límite de Excel. Usar `afluencia_diaria_promedio`, no la suma mensual |
 
 Hallazgos preliminares de la limpieza:
+- **Tránsito:** los atropellados (el indicador más confiable) cayeron 68 % en abr–may 2020 y en 2024 volvieron al 95 % de 2019. En 2020 cayeron más en alcaldías centrales (Coyoacán 38, Miguel Hidalgo 43, Cuauhtémoc 45; 2019 = 100) que en periféricas (Iztapalapa 63, GAM 68): **apoya H4**. ⚠️ Cortes de registro: caídas de ciclista saltan en **feb-2020, antes del confinamiento** (11 → 65/mes; no es más bicicleta); 1er semestre de 2018 incompleto (línea base = 2019); choques 2021–2022 por cambio de registro.
+- **IMSS:** 3,470,048 puestos en dic-2019; mínimo de 3,246,669 en dic-2020 (≈ −200 mil vs feb-2020); índice anual 2023 = 99.6 y 2024 = 101.2 (2019 = 100). El empleo formal se recuperó hacia 2023–2024, mucho antes que el Metro (73–79): **apoya H3**.
+- **IMSS, rangos de UMA:** "hasta 2 UMA" pasa de 1.17 M (2019) a 21 mil (2024) porque el salario mínimo subió a ≈2.3 UMA; los rangos dejan de ser comparables y se prefiere el salario promedio deflactado. Las caídas bruscas de ene-2022 y ene-2023 se deben a que el salario mínimo sube en enero y la UMA en febrero.
+- **IMSS, subdelegaciones:** San Ángel tiene saltos de ±60 mil puestos mes a mes desde 2025-10 que no aparecen en el total; probables reasignaciones administrativas.
 - **FGJ:** robo a transeúnte 18,528 (2019) → 12,306 (2020) → 10,682 (2023), sin recuperarse; violencia familiar 25,802 → 28,340 → 37,310, que subió y siguió subiendo (apoya H2).
 - **Metrobús:** mayo 2020 = −76 % vs 2019; 2023 = 113 % de 2019, ya por encima. Contrasta con el Metro (70 %); posible efecto de la ampliación de la red y del traslado de usuarios por los cierres de L1 y L12 del Metro.
+- **COVID:** 1,617,973 positivos de residentes (2020-03 → 2023-04). Olas: invierno 2020–21 (~33 mil/semana), Delta (~23 mil), Ómicron (máximo, ~60 mil en 2022-W03) y BA.5 (~46 mil). Positividad de 45–59 % en los picos: los positivos subestiman los contagios. Después de 2023-04 no hay dato (vacío, no 0).
+- **Metro:** mayo 2020 = 26 % de 2019 (−74 %); promedio 2020 = 56 %, 2025 = 79 %. **Sin L1 ni L12** 2025 = 83 %: los cierres por obra explican solo una parte, la demanda no ha vuelto (**apoya H1**). Por línea (2025): A 96, 9 95, 8 88, 12 88, 4 87; líneas 2, 3, 5, 6, 7 en 73–82. Cierres: L12 completa 2021-05-04 → 2023-01, parcial hasta 2024-01; L1 12 estaciones desde 2022-07, reabre por etapas hasta 2025-12; incendio del PCC (9-ene-2021) cerró L1–L6 varios días.
 
 ## 4. Estructura de carpetas
 ```
@@ -189,7 +220,7 @@ Metro/
 ├── informe/                     ← informe LaTeX entregable
 ├── notebooks/
 │   ├── 00_contexto_y_datasets.ipynb
-│   └── 01_limpieza_datasets.ipynb   ← semáforo (en proceso) + resultados de FGJ y Metrobús
+│   └── 01_limpieza_datasets.ipynb   ← semáforo (en proceso), FGJ, Metrobús, IMSS, hoteles, tránsito y Metro
 └── src/
     ├── download/
     │   ├── comun.py             ← caché, pausas entre descargas, MANIFEST con candado

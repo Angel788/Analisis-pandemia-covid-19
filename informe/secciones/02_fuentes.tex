@@ -4,7 +4,45 @@ La mayoría de las fuentes provienen del Portal de Datos Abiertos de la CDMX
 (\url{https://datos.cdmx.gob.mx}). Este portal usa la plataforma CKAN, cuya API permite consultar el
 catálogo de forma automática. El resto de las fuentes provienen de INEGI, IMSS, SESNSP y la Secretaría de Salud.
 
-\subsection{Selección de conjuntos de datos}\label{sec:seleccion}
+\subsection{Selección final}\label{sec:seleccion_final}
+Después de descargar y revisar los datos, la selección se redujo a \textbf{ocho conjuntos}: seis
+principales y dos de control (Tabla~\ref{tab:seleccion_final}). Los hechos de tránsito se prefirieron
+sobre Ecobici porque complementan las debilidades del Metro: miden el tránsito vehicular, que es la
+otra mitad de la hipótesis H1, y tienen datos por alcaldía.
+
+\begin{table}[h]
+\centering
+\caption{Selección final de conjuntos de datos.}\label{tab:seleccion_final}
+\small
+\begin{tabular}{llL{6.5cm}}
+\toprule
+\textbf{Dimensión} & \textbf{Conjunto} & \textbf{Rol}\\
+\midrule
+Movilidad & Metro & Principal: transporte masivo\\
+Movilidad & Metrobús & Principal: transporte masivo\\
+Movilidad & Hechos de tránsito (SSC) & Principal: tránsito vehicular, por alcaldía\\
+Seguridad & Carpetas de investigación (FGJ) & Principal: delitos por tipo y alcaldía\\
+Economía & Puestos de trabajo (IMSS) & Principal: empleo formal y salario\\
+Economía & Ocupación hotelera & Principal: turismo y servicios\\
+Pandemia & Casos COVID CDMX & Control: intensidad de la pandemia\\
+Pandemia & Semáforo epidemiológico & Control: restricciones vigentes\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Descartados.} Se descartaron cinco conjuntos:
+\begin{itemize}
+  \item \textbf{Ecobici:} termina en julio de 2024 y cambió de sistema en 2022.
+  \item \textbf{Llamadas al 911:} no llega al periodo post-pandemia y es el más costoso de limpiar.
+  \item \textbf{ENOE:} son microdatos nacionales y el IMSS ya cubre el empleo.
+  \item \textbf{SESNSP:} solo servía para validar a la FGJ y requería descarga manual.
+  \item \textbf{DENUE.}
+\end{itemize}
+Sus archivos se conservan en \archivo{data/raw/}. En consecuencia, la hipótesis H4 (diferencias entre
+alcaldías) solo se evaluará en seguridad y seguridad vial, y el ejemplo de imputación con regresión
+será el \emph{backcasting} de la ocupación hotelera con el empleo del IMSS.
+
+\subsection{Primera selección}\label{sec:seleccion}
 Se identificaron 29 fuentes en total. Para que la fase sea manejable sin perder cobertura, se
 seleccionaron \textbf{14} con cuatro criterios:
 \begin{enumerate}

@@ -14,6 +14,7 @@ Ver contexto y fuentes en [CONTEXTO.md](CONTEXTO.md).
 - [ ] Crear `data/raw/MANIFEST.csv` (fuente, url, fecha_descarga, sha256)
 - [ ] Confirmar los cortes de periodos (pre / choque / transición / post)
 - [x] Seleccionar los datasets a usar: 14 seleccionados y el resto opcionales (26-sep-2026)
+- [x] **Selección final: 8 datasets** — Metro, Metrobús, hechos de tránsito, FGJ, IMSS, ocupación hotelera + COVID y semáforo como control. Descartados: Ecobici, 911, ENOE, SESNSP, DENUE (ver CONTEXTO.md §3.0.0)
 
 - [x] Repositorio en GitHub: `.gitignore` excluye `data/raw/` (3 GB) y `fgj_carpetas` (495 MB); se suben el código, los notebooks, el informe, el MANIFEST y los CSV limpios pequeños (commit de 6 MB)
 
@@ -29,7 +30,7 @@ Scripts en `src/download/`; cada archivo queda en `data/raw/MANIFEST.csv`.
 ### Seguridad
 - [x] Carpetas FGJ: CSV anuales 2016–2024 (2024 hasta julio) + 3 notas PDF
 - [x] Llamadas 911: 2019-S1 → 2022-S1 (no hay más en el portal)
-- [ ] **SESNSP (manual, te toca a ti):** bajar desde el navegador "2015 - 2025 (Fuero Común - Delitos). Incidencia delictiva municipal" en https://www.gob.mx/sesnsp/acciones-y-programas/datos-abiertos-de-incidencia-delictiva, guardarlo en `data/raw/sesnsp/` y registrarlo con `.venv/bin/python -m src.download.registrar_manual data/raw/sesnsp/<archivo> "<url>"`
+- [~] ~~SESNSP~~ (descartado en la selección final)
 
 ### Economía
 - [x] IMSS: 128 meses (2016-01 → 2026-08) filtrados a la CDMX, 717 MB en `.csv.gz` (1 línea mal formada omitida en 2025-01)
@@ -44,8 +45,6 @@ Scripts en `src/download/`; cada archivo queda en `data/raw/MANIFEST.csv`.
 - [x] Marco Geoestadístico 2020 CDMX (83 MB)
 
 ### Problemas encontrados en la descarga → tareas nuevas
-- [ ] 911: unificar los formatos de fecha (≈60 % no se interpreta con un solo formato desde 2020-S1)
-- [ ] 911: revisar los traslapes entre semestres (cada archivo trae fechas de otros semestres) y quitar duplicados
 - [ ] Hechos de tránsito: documentar el salto 2021–2022 de la serie ampliada (cambio de registro) y decidir si se usa solo como indicador relativo
 - [ ] Definir la ventana post-pandemia común (2023-01 → 2024-07) por el corte de FGJ, Ecobici y hoteles
 - [ ] Semáforo: rellenar las semanas 2020-W53 y 2022-W01 (no vienen en el archivo) y documentar las diferencias con el semáforo local de la CDMX
@@ -72,14 +71,32 @@ Scripts en `src/download/`; cada archivo queda en `data/raw/MANIFEST.csv`.
 - [x] **Metrobús** (`src/clean/metrobus.py`): líneas unificadas (14 → 7), 2 errores anulados, 57 valores estimados marcados, 30 días atípicos reales conservados
 - [x] Notebook `01_limpieza_datasets.ipynb` con los resultados de FGJ y Metrobús (reportes, faltantes, gráficas)
 - [ ] Semáforo (notebook 01): ya está en formato largo y guardado; falta rellenar 2020-W53 y 2022-W01
-- [ ] Metro: pasar a script la limpieza del notebook (mojibake, `LÃ­nea N`/`Linea N`) y marcar los cierres de L12 (2021-05 → 2023) y L1 (2022-07 → 2024)
-- [ ] Ecobici
-- [ ] Hechos de tránsito (unificar formatos de fecha entre la ampliada y 2024)
-- [ ] 911: unificar los formatos de fecha, revisar traslapes entre semestres y homologar los tipos de incidente
-- [ ] IMSS: sumar `ta` (puestos de trabajo) por mes para toda la CDMX, con desglose por sector, sexo y rango salarial. **No hay desglose por alcaldía** (`cve_municipio` vacío en toda la CDMX). Detectar la codificación por archivo y aceptar `.csv` y `.csv.gz`
+- [x] Metro (notebook 01): mojibake, 24 → 12 líneas, 2 estaciones con doble escritura, duplicado Oceanía/Deportivo Oceanía, columna `estado` (abierta / cerrada / no_existia / sin_registro), cierres de L12 y L1 marcados → `metro_linea_dia`, `metro_estacion_mes`, `metro_mes`; tabla de errores y 3 gráficas (27-sep-2026)
+- [ ] Metro: en la integración usar `afluencia_diaria_promedio` y una variante **sin L1 ni L12** (2021-05 → 2025-12) para separar obras de pandemia
+- [ ] Metro (opcional): pasar la limpieza del notebook a `src/clean/metro.py`, como la del Metrobús
+- [~] ~~Ecobici~~ (descartado)
+- [x] Hechos de tránsito (notebook 01): fechas unificadas, 28 duplicados eliminados, alcaldías a clave INEGI, agregado mes × alcaldía × tipo con lesionados y fallecidos → `transito_alcaldia_mes.csv`; errores documentados en el notebook
+- [x] Tránsito: gráficas (tipos, peatones/ciclistas, mapa de calor por alcaldía, fallecidos) en el notebook 01 y en el informe
+- [x] Tránsito: tabla diaria `transito_alcaldia_dia` (día × alcaldía × tipo, 245,472 filas); 7 días con registro bajo marcados con `registro_bajo` (27-sep-2026)
+- [ ] Tránsito: si se analiza por día o semana, excluir o imputar los 7 días con `registro_bajo`
+- [ ] Tránsito: usar **atropellados** como indicador principal y **2019** como línea base; no usar caídas de ciclista (corte de registro en feb-2020) ni el 1er semestre de 2018 (incompleto)
+- [~] ~~911~~ (descartado)
+- [x] IMSS (notebook 01): `imss_subdelegacion_mes.csv` con 128 meses × 10 subdelegaciones; validado (sexo y rangos suman igual a puestos; dic-2019 = 3,470,048)
+- [x] IMSS: gráficas de top subdelegaciones, rangos UMA y salario (notebook 01) agregadas al informe
+- [ ] IMSS: San Ángel tiene saltos de ±60 mil puestos mes a mes desde 2025-10 (probables reasignaciones administrativas): no usar subdelegaciones para conclusiones de empleo
+- [ ] IMSS: quitar el espacio final en `delegacion` (`.str.strip()`)
+- [ ] IMSS: deflactar `salario_promedio` con el INPC (INEGI) para compararlo en términos reales
+- [ ] IMSS: revisar los grupos de UMA ("hasta 2 UMA" se vacía desde 2023 porque el salario mínimo ≈ 2.3 UMA); decidir cortes más útiles o usar solo el salario promedio
+- [ ] IMSS (opcional): tabla aparte por `sector_economico_1` para ver qué sectores perdieron empleo
 - [x] Descargar el diccionario oficial del IMSS (`data/raw/imss/diccionario_de_datos_imss.xlsx`)
-- [ ] ENOE (calcular desocupación e informalidad de la CDMX con factores de expansión)
-- [ ] DENUE, ocupación hotelera, casos COVID, semáforo (rellenar 2022-W01), Censo 2020
+- [~] ~~ENOE~~ (descartado)
+- [ ] Ocupación hotelera: **backcasting 2016 → 2018-09 con regresión** sobre el empleo IMSS del sector de hoteles y restaurantes (confirmar el código en el catálogo)
+- [ ] FGJ: factor de completitud para jun–jul 2024 (denuncias tardías), en lugar de solo marcarlos
+- [x] Ocupación hotelera (notebook 01): redondeo a 2 decimales, fecha al día 1, `ocupacion_pct` → `data/interim/hoteles_mes.csv`
+- [ ] Ocupación hotelera: columna `imputado` + backcasting 2016 → 2018-09 (paso de completar)
+- [x] Casos COVID (notebook 01): días faltantes de mar-2020 → 0, inconsistencia del 29-mar-2020 corregida, tasas recalculadas, promedio móvil 7 días → `covid_dia`, `covid_semana`, `covid_mes` (27-sep-2026)
+- [x] FGJ: `fgj_alcaldia_mes` ahora incluye el nombre de la alcaldía (27-sep-2026)
+- [ ] Censo 2020: población por alcaldía (para tasas de FGJ y tránsito por 100 mil hab.)
 - [ ] Catálogo de estaciones de Metro y Metrobús con alcaldía (GTFS) — opcional, para bajar la movilidad a nivel alcaldía
 
 ### Decisiones tomadas en la limpieza (26-sep-2026)
@@ -87,6 +104,9 @@ Scripts en `src/download/`; cada archivo queda en `data/raw/MANIFEST.csv`.
 - FGJ: las filas idénticas (3,824; 0.19 %) se **marcan, no se borran** (parecen denuncias múltiples de un mismo fraude).
 - FGJ: los 2 meses finales (jun–jul 2024) se marcan como **incompletos** por denuncia tardía.
 - Metrobús: los días bajos por eventos reales (19-S, elecciones, festivos) **se conservan**.
+- Metro (27-sep-2026): los días de servicio gratuito sin conteo (16–17 mar 2016, 20–27 sep 2017) quedan **vacíos**, no en 0; los ceros de estaciones cerradas **se conservan** como 0 real; los atípicos altos (12-dic en Deportivo 18 de Marzo, eventos en Zócalo, reaperturas) **se conservan**.
+
+- [ ] Reformular H4 en el informe: solo se evalúa con FGJ y hechos de tránsito
 
 ## 4. Integración
 - [ ] Definir las llaves comunes: `fecha` (día/semana/mes) + `cve_alcaldia`

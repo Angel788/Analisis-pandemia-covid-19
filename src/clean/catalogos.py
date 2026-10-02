@@ -53,6 +53,7 @@ _ALIAS = {
     "MAGDALENA CONTRERAS": "LA MAGDALENA CONTRERAS",
     "GUSTAVO A MADERO": "GUSTAVO A. MADERO",
     "GAM": "GUSTAVO A. MADERO",
+    "CUAHUTEMOC": "CUAUHTEMOC",  # errata en hechos de tránsito 2024
 }
 
 
