@@ -7,11 +7,13 @@ Salidas:  data/interim/metrobus_linea_dia.csv / .parquet  (fecha × línea)
 
 Decisiones:
 - Los vacíos antes de la inauguración de cada línea NO son faltantes: la línea no existía
-  (el diccionario lo confirma). Se marcan con `linea_operando = False`.
+  (el diccionario lo confirma). Se ELIMINAN de la tabla diaria (2-oct-2026) y en la mensual la
+  afluencia de una línea que todavía no existía es 0.
 - En 2023 las líneas vienen como "linea N" y en el resto como "Línea N": se unifican a "Línea N".
 - Valores atípicos: se comparan contra la mediana móvil de 29 días de la misma línea. Los días bajos
   explicables (domingos, festivos, sismo 19-S, elecciones, visita papal) se conservan. Solo se anulan
-  los errores evidentes listados en ERRORES.
+  los errores evidentes listados en ERRORES, que se rellenan con el promedio del mismo día de la
+  semana anterior y la siguiente (marcados con `imputado`).
 - 57 valores con decimales (Línea 4, ene–feb 2025) se tratan como estimaciones: se redondean y se marcan.
 - La desglosada (por tipo de pago, desde 2021) suma exactamente lo mismo que la simple, así que no se
   usa para la serie; queda en raw para análisis de gratuidad.
@@ -48,6 +50,7 @@ def limpiar() -> pd.DataFrame:
     d["linea_operando"] = d.fecha >= d.linea.map(inicio)
     reporte.append(("Filas antes de la inauguración de su línea (no son faltantes)", f"{(~d.linea_operando).sum():,}"))
     reporte.append(("Faltantes con la línea operando", f"{(d.linea_operando & d.afluencia.isna()).sum():,}"))
+    d = d[d.linea_operando].copy()
 
     dup = d.duplicated(["fecha", "linea"])
     reporte.append(("Duplicados fecha × línea", f"{dup.sum():,}"))
@@ -62,25 +65,37 @@ def limpiar() -> pd.DataFrame:
     reporte.append((f"Días atípicos (> {UMBRAL_ALTO}× o < {UMBRAL_BAJO}× la mediana de 29 días)",
                     f"{d.atipico.sum():,} (se conservan salvo errores evidentes)"))
 
-    d["error_corregido"] = ""
+    d["error_corregido"] = "ninguno"
     for (fecha, linea), motivo in ERRORES.items():
         m = d.fecha.eq(fecha) & d.linea.eq(linea)
         d.loc[m, "afluencia"] = pd.NA
         d.loc[m, "error_corregido"] = motivo
     reporte.append(("Errores evidentes anulados", f"{len(ERRORES)}"))
 
+    # relleno: promedio del mismo día de la semana, una semana antes y una después (las que existan)
+    d["imputado"] = False
+    serie = d.set_index(["linea", "fecha"]).afluencia
+    for (fecha, linea) in ERRORES:
+        f = pd.Timestamp(fecha)
+        vecinos = [serie.get((linea, f + pd.Timedelta(days=k))) for k in (-7, 7)]
+        vecinos = [v for v in vecinos if v is not None and pd.notna(v)]
+        m = d.fecha.eq(f) & d.linea.eq(linea)
+        d.loc[m, "afluencia"] = sum(vecinos) / len(vecinos)
+        d.loc[m, "imputado"] = True
+    reporte.append(("Errores anulados rellenados (mismo día de la semana ±7 días)", f"{d.imputado.sum():,}"))
+
     # 57 valores con decimales (Línea 4, ene–feb 2025 y 1 en 2026): probablemente estimados por el
     # Metrobús, no conteos. Se redondean y se marcan.
-    d["valor_estimado"] = d.afluencia.notna() & (d.afluencia % 1 != 0)
+    d["valor_estimado"] = d.afluencia.notna() & (d.afluencia % 1 != 0) & ~d.imputado
     reporte.append(("Valores con decimales (probables estimaciones; se redondean y marcan)", f"{d.valor_estimado.sum():,}"))
     d["afluencia"] = d["afluencia"].round().astype("Int64")
-    return d[["fecha", "linea", "afluencia", "linea_operando", "atipico", "ratio_mediana", "valor_estimado",
+    return d[["fecha", "linea", "afluencia", "atipico", "ratio_mediana", "valor_estimado", "imputado",
               "error_corregido"]] \
         .sort_values(["fecha", "linea"]).reset_index(drop=True)
 
 
 def mensual(d: pd.DataFrame) -> pd.DataFrame:
-    op = d[d.linea_operando]
+    op = d
     por_linea = (op.assign(mes=op.fecha.dt.to_period("M").dt.to_timestamp())
                    .pivot_table(index="mes", columns="linea", values="afluencia", aggfunc="sum"))
     dias = op.groupby(op.fecha.dt.to_period("M").dt.to_timestamp()).fecha.nunique()
@@ -90,6 +105,7 @@ def mensual(d: pd.DataFrame) -> pd.DataFrame:
         "dias_con_dato": dias,
     })
     m["afluencia_diaria_promedio"] = (m.afluencia_total / m.dias_con_dato).round(0)
+    por_linea = por_linea.fillna(0).astype(int)   # línea que todavía no existía → 0 viajes
     por_linea.columns = [c.lower().replace("í", "i").replace(" ", "_") for c in por_linea.columns]
     return m.join(por_linea).reset_index(names="mes")
 
@@ -106,7 +122,7 @@ def escribir_reporte(d: pd.DataFrame, m: pd.DataFrame) -> None:
     lineas += ["", "## Días atípicos conservados (eventos reales)", "",
                "| Fecha | Línea | Afluencia | × mediana |", "|---|---|---:|---:|"]
     lineas += [f"| {r.fecha.date()} | {r.linea} | {r.afluencia if pd.notna(r.afluencia) else '—'} | {r.ratio_mediana} |"
-               for r in at.itertuples() if not r.error_corregido]
+               for r in at.itertuples() if r.error_corregido == "ninguno"]
     lineas += ["", "## Afluencia diaria promedio por año", "", "| Año | Viajes/día | Índice 2019=100 |", "|---|---:|---:|"]
     lineas += [f"| {a} | {v:,.0f} | {v / base * 100:.1f} |" for a, v in anual.items()]
     lineas += ["", "Nota: la red creció (Línea 6 en 2016, Línea 7 en 2018 y ampliaciones posteriores), así que",

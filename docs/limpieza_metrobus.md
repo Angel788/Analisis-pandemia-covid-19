@@ -13,6 +13,7 @@ Generado por `src/clean/metrobus.py`.
 | Duplicados fecha × línea | 0 |
 | Días atípicos (> 2.5× o < 0.2× la mediana de 29 días) | 30 (se conservan salvo errores evidentes) |
 | Errores evidentes anulados | 2 |
+| Errores anulados rellenados (mismo día de la semana ±7 días) | 2 |
 | Valores con decimales (probables estimaciones; se redondean y marcan) | 57 |
 
 ## Errores anulados
@@ -59,7 +60,7 @@ Generado por `src/clean/metrobus.py`.
 
 | Año | Viajes/día | Índice 2019=100 |
 |---|---:|---:|
-| 2005 | 194,766 | 16.0 |
+| 2005 | 201,193 | 16.5 |
 | 2006 | 203,388 | 16.7 |
 | 2007 | 212,749 | 17.5 |
 | 2008 | 245,220 | 20.1 |
@@ -71,7 +72,7 @@ Generado por `src/clean/metrobus.py`.
 | 2014 | 710,356 | 58.3 |
 | 2015 | 757,588 | 62.2 |
 | 2016 | 957,497 | 78.6 |
-| 2017 | 1,009,578 | 82.9 |
+| 2017 | 1,010,061 | 83.0 |
 | 2018 | 1,128,730 | 92.7 |
 | 2019 | 1,217,528 | 100.0 |
 | 2020 | 659,216 | 54.1 |

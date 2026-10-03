@@ -32,8 +32,9 @@ El módulo \archivo{catalogos.py} concentra lo que comparten todas las fuentes:
         junio y julio de 2024 se marcan como \emph{meses incompletos}, porque todavía faltan las
         denuncias tardías.
   \item \textbf{Alcaldía.} Se toma de \archivo{alcaldia_hecho}. Coincide con la alcaldía calculada por
-        coordenadas en el 99.7\,\% de los casos. Los registros \enquote{CDMX (indeterminada)} no
-        traen coordenadas, así que se conservan para el total de la ciudad con la clave \archivo{09000}.
+        coordenadas en el 99.7\,\% de los casos. Los registros \enquote{CDMX (indeterminada)} y los
+        que vienen vacíos no traen coordenadas, así que no se pueden asignar a ninguna alcaldía y se
+        descartan (18,595, menos del 1\,\%). Así todas las tablas del proyecto usan las mismas 16 alcaldías.
   \item \textbf{Duplicados.} El archivo no trae un identificador de carpeta. Las 3,824 filas
         idénticas en las 21 columnas (0.19\,\%) tienen como hora de inicio \archivo{00:00:00}, un valor de relleno, y son sobre todo fraude y
         abuso de confianza, lo que sugiere denuncias múltiples de un mismo hecho. Se \emph{marcan} en
@@ -58,28 +59,28 @@ Sin fecha del hecho & 545 & se descartan\\
 Hecho anterior a 2016 & 32,223 & se descartan\\
 Hecho posterior al inicio de la carpeta & 110 & se descartan\\
 Hecho fuera de la CDMX & 16,734 & se descartan\\
-En la CDMX sin alcaldía identificable & 18,595 & se conservan (clave 09000)\\
-Hechos no delictivos & 66,960 & se marcan\\
-Últimos 2 meses (subregistro) & 30,814 & se marcan\\
+En la CDMX sin alcaldía identificable & 18,595 & se descartan\\
+Hechos no delictivos & 65,430 & se marcan\\
+Últimos 2 meses (subregistro) & 29,600 & se marcan\\
 \midrule
-\textbf{Base limpia} & \textbf{1,937,812} & 97.5\,\% del original\\
+\textbf{Base limpia} & \textbf{1,919,217} & 96.6\,\% del original\\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \paragraph{Salidas.} \archivo{fgj_carpetas.parquet}, con una fila por carpeta, y
 \archivo{fgj_alcaldia_mes.parquet}, con los conteos por alcaldía, mes y grupo de delito
-(34,683 filas). Esta tabla incluye la clave INEGI y el nombre de la alcaldía; las carpetas sin
-alcaldía identificable aparecen con la clave 09000 y el nombre \enquote{CDMX (sin alcaldía)}.
+(33,478 filas). Esta tabla incluye la clave INEGI y el nombre de la alcaldía, y todas sus filas
+corresponden a una de las 16 alcaldías.
 
 \paragraph{Primeros resultados.} La Figura~\ref{fig:fgj_grupos} muestra tres grupos con
 comportamientos distintos:
 \begin{itemize}
   \item \textbf{Robo a transeúnte:} cayó con el confinamiento y no se ha recuperado (18,528
-        carpetas en 2019, 12,306 en 2020 y 10,682 en 2023). Sin embargo, \emph{ya venía bajando
+        carpetas en 2019, 12,304 en 2020 y 10,579 en 2023). Sin embargo, \emph{ya venía bajando
         desde finales de 2018}, así que no toda la caída puede atribuirse a la pandemia.
   \item \textbf{Violencia familiar:} bajó en abril de 2020, probablemente porque el confinamiento
-        dificultó denunciar, y después subió con fuerza (25,802 en 2019, 28,340 en 2020 y 37,310
+        dificultó denunciar, y después subió con fuerza (25,780 en 2019, 28,311 en 2020 y 36,686
         en 2023). Esto es consistente con la hipótesis H2.
   \item \textbf{Robo en transporte público:} cayó a menos de la mitad y se estabilizó en ese nivel,
         igual que la afluencia del Metro.
@@ -104,11 +105,11 @@ propia con datos de la FGJ.}\label{fig:fgj_grupos}
 \midrule
 Registros leídos (fecha × línea) & 53,732\\
 Nombres de línea (\archivo{Línea N} / \archivo{linea N} en 2023) & 14 $\rightarrow$ 7 unificados\\
-Vacíos antes de la inauguración de cada línea & 17,227; no son faltantes, se marcan\\
+Filas antes de la inauguración de cada línea & 17,227; no son faltantes, se eliminan\\
 Faltantes con la línea operando & 0\\
 Duplicados fecha × línea & 0\\
 Días atípicos respecto a la mediana móvil de 29 días & 30; se conservan (eventos reales)\\
-Errores evidentes & 2; se anulan\\
+Errores evidentes & 2; se anulan y se rellenan con el mismo día de la semana anterior y siguiente\\
 Valores con decimales (Línea~4, ene--feb 2025) & 57; se redondean y se marcan como estimados\\
 \bottomrule
 \end{tabular}
@@ -123,6 +124,12 @@ de septiembre. Esos se conservan. Solo se anularon dos errores evidentes:
         Probablemente es el acumulado desde la inauguración.
   \item 20 de septiembre de 2017, Línea~2: 9 pasajeros.
 \end{itemize}
+Para no dejar huecos, ambos se rellenaron con el promedio del mismo día de la semana, una semana antes
+y una después (231,380 y 173,858 viajes; en el primer caso solo existe la semana siguiente, porque es
+el día de la inauguración), y se marcaron con la columna \archivo{imputado}. Las filas anteriores a la
+inauguración de cada línea se eliminaron de la tabla diaria, porque la línea no existía; en la tabla
+mensual, la afluencia de una línea en los meses previos a su apertura es 0. Así, ninguna de las dos
+tablas tiene vacíos.
 
 \paragraph{Metro frente a Metrobús.} Ambos sistemas cayeron casi lo mismo en mayo de 2020: el Metro
 a un índice de 26.5 y el Metrobús a 24.2, con 2019 = 100. Sin embargo, su recuperación fue muy
@@ -400,6 +407,18 @@ guardaron tres agregados en CSV y Parquet: \archivo{metro_linea_dia} (71,633 fil
 dato, las estaciones cerradas en promedio y una columna por línea). Los totales de las tres tablas
 coinciden con los de la base depurada (23,155 millones de viajes).
 
+\paragraph{Clave de alcaldía por estación.} La afluencia del Metro no trae alcaldía. Para poder unirla
+con las demás fuentes se descargó el conjunto \enquote{Líneas y Estaciones del STC Metro} del portal de
+la CDMX, con las coordenadas de las 195 estaciones. La alcaldía se asignó por coordenadas (punto en
+polígono), porque 15 estaciones que están en el límite traen dos alcaldías en el nombre. Tres
+estaciones se escriben distinto en los dos archivos y se emparejaron a mano. Las 11 estaciones del
+Estado de México (Líneas~2, A y B) recibieron la clave INEGI de su municipio, así que ninguna estación
+quedó sin clave. Con esto, \archivo{metro_estacion_mes} incluye \archivo{cve_alcaldia} y
+\archivo{alcaldia}, y se generó \archivo{metro_alcaldia_mes} (2,155 filas): la afluencia mensual de las
+11 alcaldías de la CDMX con Metro. Cuajimalpa, La Magdalena Contreras, Milpa Alta, Tlalpan y
+Xochimilco no tienen estaciones. En 2019, Cuauhtémoc concentró 370 millones de viajes, casi el doble
+que Venustiano Carranza (199 millones).
+
 \paragraph{Cierres de líneas.} La Línea~12 estuvo cerrada por completo desde el colapso del 3 de
 mayo de 2021, reabrió por tramos desde enero de 2023 y por completo en enero de 2024. La Línea~1
 cerró 12 estaciones por modernización desde julio de 2022 y reabrió por etapas hasta diciembre de 2025
@@ -458,8 +477,10 @@ Fines de semana con muchas menos pruebas (el domingo, unas 4 veces menos que ent
 \paragraph{Salidas.} \archivo{covid_dia} (1,130 días), \archivo{covid_semana} (162 semanas, con la
 misma semana ISO que el semáforo para poder unirlos) y \archivo{covid_mes} (38 meses). Las tasas
 semanales y mensuales se calculan con las sumas del periodo, no como promedio de tasas diarias. La
-primera y la última semana y el primer y el último mes están incompletos y se marcan. Después de
-abril de 2023 no hay dato: al integrar se debe dejar vacío, no en 0.
+primera y la última semana y el primer y el último mes están incompletos y se marcan. Las tablas no
+tienen vacíos: en los 17 días agregados de marzo de 2020 no hubo pruebas ni positivos, así que su tasa
+de positividad es 0, y en los primeros 6 días el promedio móvil se calcula con los días disponibles.
+Después de abril de 2023 no hay dato: al integrar se debe dejar vacío, no en 0.
 
 \paragraph{Primeros resultados.} Se observan cuatro olas grandes (Figura~\ref{fig:covid}): la de
 invierno 2020--2021 (unos 33 mil positivos por semana), Delta (23 mil), Ómicron, que es el máximo de

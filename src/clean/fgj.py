@@ -9,8 +9,9 @@ Decisiones (ver docs/limpieza_fgj.md):
 - El análisis temporal usa la FECHA DEL HECHO, no la de inicio de la carpeta.
 - Se descartan hechos anteriores a 2016 (su registro está incompleto: solo aparecen si se denunciaron
   desde 2016) y los hechos fuera de la CDMX.
-- La alcaldía se toma de `alcaldia_hecho`; si falta, se infiere de las coordenadas. Las
-  "CDMX (indeterminada)" se conservan para el total de la ciudad, sin alcaldía.
+- La alcaldía se toma de `alcaldia_hecho`; si falta, se infiere de las coordenadas. Las carpetas sin
+  alcaldía identificable ("CDMX (indeterminada)" y vacías, sin coordenadas) se DESCARTAN para que
+  todas las tablas usen las mismas 16 alcaldías (decisión del 2-oct-2026; antes se guardaban con 09000).
 - Las filas idénticas en todas las columnas se MARCAN (`duplicado_exacto`), no se borran.
 - Los últimos meses están subregistrados: un hecho se denuncia con retraso (p90 = 56 días para los hechos desde 2016) y el
   archivo termina en la fecha de corte. Se marca con `mes_incompleto`.
@@ -80,8 +81,10 @@ def limpiar(d: pd.DataFrame) -> pd.DataFrame:
     recuperadas = cve_por_coordenadas(d.loc[faltan, "latitud"], d.loc[faltan, "longitud"])
     d.loc[faltan, "cve_alcaldia"] = recuperadas
     paso("Alcaldía recuperada por coordenadas", int(recuperadas.notna().sum()))
-    paso("En la CDMX sin alcaldía identificable (se conservan)", int(d.cve_alcaldia.isna().sum()),
-         "cuentan solo para el total de la ciudad")
+    sin_alcaldia = d.cve_alcaldia.isna()
+    paso("En la CDMX sin alcaldía identificable (se descartan)", int(sin_alcaldia.sum()),
+         "no se pueden asignar a ninguna de las 16 alcaldías")
+    d = d[~sin_alcaldia].copy()
     d["alcaldia"] = nombre_alcaldia(d["cve_alcaldia"])
 
     # --- delitos
@@ -110,11 +113,10 @@ def limpiar(d: pd.DataFrame) -> pd.DataFrame:
 def agregar(d: pd.DataFrame) -> pd.DataFrame:
     """Conteos por alcaldía × mes × grupo (sin hechos no delictivos ni duplicados)."""
     base = d[~d.duplicado_exacto & d.grupo_delito.ne("hecho_no_delictivo")]
-    ag = (base.assign(cve_alcaldia=base.cve_alcaldia.fillna("09000"))  # 09000 = CDMX sin alcaldía
-              .groupby(["cve_alcaldia", "mes", "grupo_delito", "dimension_delito"], observed=True)
+    ag = (base.groupby(["cve_alcaldia", "mes", "grupo_delito", "dimension_delito"], observed=True)
               .size().rename("carpetas").reset_index())
     ag["mes_incompleto"] = ag.mes.isin(d.loc[d.mes_incompleto, "mes"].unique())
-    ag.insert(1, "alcaldia", nombre_alcaldia(ag.cve_alcaldia).fillna("CDMX (sin alcaldía)"))
+    ag.insert(1, "alcaldia", nombre_alcaldia(ag.cve_alcaldia))
     return ag
 
 

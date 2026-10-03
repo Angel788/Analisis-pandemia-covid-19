@@ -33,6 +33,7 @@ DATASETS = {
     "911":             ("llamadas-numero-de-atencion-a-emergencias-911", None),
     "hoteles":         ("ocupacion-hotelera-en-la-ciudad-de-mexico", None),
     "covid":           ("total-de-pruebas-total-de-positivos-y-tasa-de-positividad", None),
+    "metro_estaciones": ("lineas-y-estaciones-del-metro", r"(?i)shp|diccionario"),  # coordenadas → alcaldía
 }
 
 # Nombres fijos para archivos que ya se descargaron antes con otro nombre.

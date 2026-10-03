@@ -68,12 +68,14 @@ Scripts en `src/download/`; cada archivo queda en `data/raw/MANIFEST.csv`.
 - [x] Guardar las salidas limpias en `data/interim/` en CSV (principal) y Parquet (respaldo), con `guardar()` de `catalogos.py`
 
 ### Por fuente
-- [x] **FGJ** (`src/clean/fgj.py`): 1,987,424 → 1,937,812 carpetas; fecha del hecho; 22 grupos de delito estables; duplicados y últimos 2 meses marcados
+- [x] **FGJ** (`src/clean/fgj.py`): 1,987,424 → 1,919,217 carpetas (sin las 18,595 sin alcaldía, 2-oct-2026); fecha del hecho; 22 grupos de delito estables; duplicados y últimos 2 meses marcados
 - [x] **Metrobús** (`src/clean/metrobus.py`): líneas unificadas (14 → 7), 2 errores anulados, 57 valores estimados marcados, 30 días atípicos reales conservados
 - [x] Notebook `01_limpieza_datasets.ipynb` con los resultados de FGJ y Metrobús (reportes, faltantes, gráficas)
 - [x] Notebook 01: limpieza explícita paso a paso de FGJ y Metrobús (comprobada contra la salida de los scripts), y explicación de cada paso del semáforo, el IMSS y los hoteles (2-oct-2026)
 - [x] Informe: separadores de miles con coma (1,180,920) en lugar de espacio fino (2-oct-2026)
 - [x] Verificación de todas las cifras del informe contra `data/interim/`; 5 correcciones (FGJ p90 = 56 días, hora 00:00:00 en duplicados, mínimo IMSS = mar-2021, excepciones por alcaldía, Línea B) (2-oct-2026)
+- [x] Estandarización (2-oct-2026): FGJ sin carpetas sin alcaldía (solo 16 alcaldías); clave de alcaldía en `metro_estacion_mes` + nueva `metro_alcaldia_mes`; Metrobús y COVID sin vacíos (ver CONTEXTO §3.0.2)
+- [ ] Decidir si los 10 días sin conteo del Metro (servicio gratuito; 120 vacíos en `metro_linea_dia`) se imputan en el paso de completar
 - [x] Versión en Word: `informe/informe.docx`, generada con `informe/a_word.py` (requiere pandoc o `pip install pypandoc_binary`) (2-oct-2026)
 - [x] Semáforo (notebook 01): formato largo, 160 semanas completas; 2020-W53 (rojo) y 2022-W01 (verde) rellenadas y marcadas con `imputado`
 - [x] Metro (notebook 01): mojibake, 24 → 12 líneas, 2 estaciones con doble escritura, duplicado Oceanía/Deportivo Oceanía, columna `estado` (abierta / cerrada / no_existia / sin_registro), cierres de L12 y L1 marcados → `metro_linea_dia`, `metro_estacion_mes`, `metro_mes`; tabla de errores y 3 gráficas (27-sep-2026)
