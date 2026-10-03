@@ -110,6 +110,9 @@ Scripts en `src/download/`. Cada archivo queda registrado en `data/raw/MANIFEST.
 | Hechos de tránsito (comparable) | `hechos_transito/` | **2018 → 2019** | 30,758 | ⚠️ No cubre la pandemia; se reemplaza por la ampliada |
 | Hechos de tránsito (ampliada) | `hechos_transito_ampliada/` | 2018 → 2023 | 134,079 | ⚠️ Salto 2021–2022 (17 mil → 30 mil/año): cambio de registro, "no comparable" |
 | Hechos de tránsito 2024 | `hechos_transito_2024/` | 2024 | 30,655 | Fechas en formato dd/mm/aaaa |
+
+**Datos de hechos de tránsito en Google Drive:** https://drive.google.com/drive/folders/1_Ih0f-9izLZPIRkHpHvWx1OMLO0lkmAK (copia de los archivos que usa el proyecto; van en `data/raw/hechos_transito_ampliada/` y `data/raw/hechos_transito_2024/`).
+
 | Carpetas FGJ | `fgj/` | 2016-01 → **2024-07** | 1,987,424 | 2024 incompleto (hasta julio); se descartó el acumulado (duplica los anuales) |
 | Llamadas 911 | `911/` | 2019-S1 → **2022-S1** | 4,117,932 | ⚠️ No llega al post-pandemia; formatos de fecha mezclados |
 | SESNSP municipal | `sesnsp/` | 2015 → 2025 | — | ⚠️ **Descarga manual**: SharePoint bloquea scripts |

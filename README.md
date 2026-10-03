@@ -21,6 +21,13 @@ python -m venv .venv
 .venv/bin/python -m src.clean.metrobus
 ```
 
+### Datos de hechos de tránsito
+Los archivos de hechos de tránsito (SSC) usados en el proyecto están en esta carpeta de Google Drive:
+
+**https://drive.google.com/drive/folders/1_Ih0f-9izLZPIRkHpHvWx1OMLO0lkmAK**
+
+Para usarlos sin el script de descarga, copia los CSV en `data/raw/hechos_transito_ampliada/` (serie ampliada 2018–2023) y `data/raw/hechos_transito_2024/` (2024), que es donde los busca el notebook `01_limpieza_datasets.ipynb`.
+
 Los datos limpios pequeños (`data/interim/*.csv`) sí están en el repositorio. La base de carpetas de la FGJ a nivel de carpeta (`fgj_carpetas`, 495 MB) se regenera con `src.clean.fgj`.
 
 El informe entregable está en `informe/main.pdf`; el contexto actualizado, en `CONTEXTO.md`, y las tareas, en `PENDIENTES.md`.

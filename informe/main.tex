@@ -1,4 +1,4 @@
-\documentclass[11pt,letterpaper]{article}
+\documentclass[11pt,letterpaper,titlepage]{article}  % titlepage: portada y resumen en páginas propias
 
 % --- Idioma y codificación ---
 \usepackage[utf8]{inputenc}
@@ -41,10 +41,12 @@
 % --- Código / nombres de archivo ---
 \newcommand{\archivo}[1]{\texttt{\detokenize{#1}}}
 
-\title{\textbf{Cambios en movilidad, seguridad y actividad económica\\
+\title{\includegraphics[height=3cm]{figuras/logo_ipn.png}\hfill\includegraphics[height=2.4cm]{figuras/logo_escom.png}\\[1em]
+\large Instituto Politécnico Nacional\\ Escuela Superior de Cómputo\\[3em]
+\LARGE\textbf{Cambios en movilidad, seguridad y actividad económica\\
 de la Ciudad de México antes, durante y después del COVID-19}\\[0.5em]
 \large Proyecto de minería de datos --- Fase 1: recolección y limpieza de datos}
-\author{Garcia Martinez Angel Yahel\\ Soto Peña Israel\\[0.3em] \small Materia --- Institución}
+\author{Garcia Martinez Angel Yahel\\ Soto Peña Israel\\[0.3em] \small Materia: Minería de Datos}
 \date{\today}
 
 \begin{document}
@@ -53,14 +55,18 @@ de la Ciudad de México antes, durante y después del COVID-19}\\[0.5em]
 
 \begin{abstract}
 Este documento reúne el trabajo de la primera fase del proyecto: la definición del problema,
-la identificación de fuentes de datos abiertos, los criterios de limpieza e integración y
-la bitácora de actividades. El objetivo de la fase es construir una base de datos integrada,
+la identificación de fuentes de datos abiertos, su recolección y los criterios y resultados de su
+limpieza. El objetivo de la fase es construir una base de datos integrada,
 limpia y documentada sobre movilidad, seguridad y actividad económica en la Ciudad de México
 para el periodo 2016--2026. Esa base será el insumo de un modelo predictivo en la fase siguiente.
 \end{abstract}
 
 \tableofcontents
-\newpage
+\clearpage
+\listoffigures
+\clearpage
+\listoftables
+\clearpage
 
 \input{secciones/01_problema}
 \input{secciones/02_fuentes}
@@ -68,7 +74,7 @@ para el periodo 2016--2026. Esa base será el insumo de un modelo predictivo en 
 \input{secciones/035_exploracion_metro}
 \input{secciones/036_descarga}
 \input{secciones/037_limpieza}
-\input{secciones/04_bitacora}
+% La bitácora (secciones/04_bitacora.tex) se conserva como registro interno, pero no se incluye en el informe.
 \input{secciones/05_pendientes}
 
 \appendix
