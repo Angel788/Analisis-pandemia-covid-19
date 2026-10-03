@@ -66,7 +66,7 @@ Se redujo a **8 datasets** para que la fase sea manejable: 6 principales + 2 de 
 | Economía | IMSS (puestos de trabajo) | Principal | ✅ notebook 01 |
 | Economía | Ocupación hotelera | Principal | ✅ notebook 01 → `hoteles_mes.csv` (falta backcasting 2016–2018) |
 | Pandemia | Casos COVID CDMX | Control | ✅ notebook 01 → `covid_dia`, `covid_semana`, `covid_mes` |
-| Pandemia | Semáforo federal | Control | 🟡 faltan 2020-W53 y 2022-W01 |
+| Pandemia | Semáforo federal | Control | ✅ notebook 01 → `semaforo_cdmx_semana.csv` (2020-W53 y 2022-W01 rellenadas, columna `imputado`) |
 
 **Descartados:** Ecobici (termina en 2024-07 y cambió de sistema en 2022), 911 (no llega al post-pandemia y es el más costoso de limpiar), ENOE (microdatos nacionales; el IMSS ya cubre el empleo), SESNSP (solo validaba a la FGJ y requería descarga manual) y DENUE. Sus archivos siguen en `data/raw/` por si se retoman.
 
@@ -183,11 +183,13 @@ Scripts en `src/download/`. Cada archivo queda registrado en `data/raw/MANIFEST.
 ### 3.0.2 Estado de la limpieza (26-sep-2026)
 Cada salida se guarda en **CSV** (UTF-8 con BOM, abre bien en Excel) y en **Parquet** (respaldo más ligero que conserva los tipos). ⚠️ `fgj_carpetas.csv` tiene 1.9 millones de filas: Excel solo muestra 1,048,576; usar pandas o el agregado `fgj_alcaldia_mes.csv`.
 
+Desde el 2-oct-2026 el notebook `01_limpieza_datasets.ipynb` muestra la limpieza de **todas** las fuentes paso a paso: la FGJ y el Metrobús repiten a la vista los pasos de sus scripts y comprueban que el resultado es idéntico al guardado.
+
 | Fuente | Script | Salida en `data/interim/` | Resultado |
 |---|---|---|---|
 | FGJ | `src/clean/fgj.py` | `fgj_carpetas`, `fgj_alcaldia_mes` (.csv y .parquet) | 1,937,812 carpetas limpias (97.5 %); 22 grupos de delito; 16 alcaldías + "09000" (CDMX sin alcaldía). `fgj_alcaldia_mes` trae clave **y nombre** de alcaldía (`alcaldia`; "CDMX (sin alcaldía)" para 09000) desde el 27-sep-2026 |
 | Casos COVID | notebook `01_limpieza_datasets.ipynb` | `covid_dia` (1,130), `covid_semana` (162, semana ISO como el semáforo), `covid_mes` (38) (.csv y .parquet) | 17 días de mar-2020 sin fila → 0 (`dia_agregado`); antes del 5-abr-2020 < 70 pruebas/día (`arranque`); 29-mar-2020 residentes (6) > total (5) → total = 6; tasas recalculadas con sumas; promedio móvil de 7 días (domingo ≈ ¼ de las pruebas); semana 2023-W14 y mes 2023-04 incompletos. Usar los de **residentes** (`_cdmx`) |
-| Semáforo | notebook `01_limpieza_datasets.ipynb` | `semaforo_cdmx_semana.csv` | En proceso: CDMX en formato largo; faltan rellenar 2020-W53 y 2022-W01 |
+| Semáforo | notebook `01_limpieza_datasets.ipynb` | `semaforo_cdmx_semana.csv` | 160 semanas (2020-W22 → 2023-W24); 2020-W53 (rojo) y 2022-W01 (verde) rellenadas con el color de sus semanas vecinas (iguales antes y después), marcadas con `imputado = True` |
 | IMSS | notebook `01_limpieza_datasets.ipynb` (código por pasos) | `imss_subdelegacion_mes.csv` | 1,280 filas (128 meses × 10 subdelegaciones); puestos, hombres/mujeres, permanentes/eventuales, 3 rangos UMA + sin dato, salario promedio. ⚠️ Fecha guardada como dd/mm/aaaa: leer con `format="%d/%m/%Y"` |
 | Hechos de tránsito | notebook `01_limpieza_datasets.ipynb` | `transito_alcaldia_mes.csv` | 8,064 filas = 84 meses (2018–2024) × 16 alcaldías × 6 tipos; total, lesionados y fallecidos; meses sin accidentes = 0. 164,706 accidentes tras quitar 28 duplicados. Tabla de errores al final de la sección. **Versión diaria** `transito_alcaldia_dia` (.csv y .parquet): 245,472 filas = 2,557 días × 16 × 6, cuadra mes a mes con la mensual; ningún día sin registro, pero 7 días con < 40 % de lo normal (p. ej. 7-may-2018 con 4 y 26-jun-2023 con 10) marcados con `registro_bajo` |
 | Ocupación hotelera | notebook `01_limpieza_datasets.ipynb` | `hoteles_mes.csv` | 70 meses (2018-10 → 2024-07); redondeo a 2 decimales (47 valores traían más), fecha al día 1 del mes, columna `ocupacion_pct`. Promedio 2019 = 67.7 %, mínimo 1.55 % (2020-05), 2023 = 63.6 % |

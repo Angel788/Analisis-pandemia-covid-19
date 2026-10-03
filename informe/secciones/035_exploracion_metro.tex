@@ -6,7 +6,7 @@ estudiará y los problemas de calidad que habrá que limpiar. El código está e
 \archivo{notebooks/00_contexto_y_datasets.ipynb}.
 
 \subsection{Descripción del archivo}
-El recurso \enquote{Afluencia Diaria del Metro (Simple)} tiene \textbf{1\,180\,920 registros}, del
+El recurso \enquote{Afluencia Diaria del Metro (Simple)} tiene \textbf{1,180,920 registros}, del
 2010-01-01 al 2026-07-31. Cada registro corresponde a un día, una línea y una estación. No tiene
 valores nulos (Tabla~\ref{tab:perfil_metro}).
 
@@ -18,12 +18,12 @@ valores nulos (Tabla~\ref{tab:perfil_metro}).
 \toprule
 \textbf{Columna} & \textbf{Tipo} & \textbf{Nulos} & \textbf{Valores únicos}\\
 \midrule
-\archivo{fecha}     & fecha   & 0 & 6\,056\\
+\archivo{fecha}     & fecha   & 0 & 6,056\\
 \archivo{anio}      & entero  & 0 & 17\\
 \archivo{mes}       & texto   & 0 & 12\\
 \archivo{linea}     & texto   & 0 & 24\\
 \archivo{estacion}  & texto   & 0 & 168\\
-\archivo{afluencia} & entero  & 0 & 92\,564\\
+\archivo{afluencia} & entero  & 0 & 92,564\\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -56,7 +56,7 @@ nombres de estación. Se reparó con la librería \archivo{ftfy}, y tras la repa
 \paragraph{2. Nombres de línea inconsistentes.} La columna \archivo{linea} tiene 24 valores
 distintos, pero el Metro tiene 12 líneas. Entre 2021 y 2023 el archivo escribe
 \texttt{LÃnea 1} (con acento y mal codificado) y en los demás años \archivo{Linea 1}. Si no se
-corrige, cada línea queda partida en dos series. Se normalizó a la forma \archivo{Linea N}.
+corrige, cada línea queda partida en dos series. Se normalizó a la forma \archivo{Línea N}.
 
 \paragraph{3. Cierres de líneas.} La Línea~12 cerró tras el colapso del 3 de mayo de 2021, y la
 Línea~1 cerró por su modernización a partir de julio de 2022. Estos cierres reducen la afluencia por

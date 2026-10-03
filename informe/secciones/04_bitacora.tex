@@ -42,7 +42,7 @@ revisaron su encabezado, número de filas y rango de fechas con Python (módulo 
 \textbf{Resultado:}
 \begin{itemize}
   \item Columnas: \archivo{fecha, anio, mes, linea, estacion, afluencia}.
-  \item 1\,180\,920 registros; cada registro corresponde a un día, una línea y una estación.
+  \item 1,180,920 registros; cada registro corresponde a un día, una línea y una estación.
   \item Cobertura: del 2010-01-01 al 2026-07-31. La línea base anterior a la pandemia es suficiente.
 \end{itemize}
 \textbf{Observaciones / problemas:} los nombres de las estaciones presentan \emph{mojibake}
@@ -79,7 +79,7 @@ conjuntos de datos, y que sirva como primera exploración reproducible.\\
         reparación quedan 165 estaciones únicas, porque había variantes duplicadas.
   \item Los \textbf{nombres de línea son inconsistentes}: entre 2021 y 2023 aparece
         \texttt{LÃnea 1} y en los demás años \archivo{Linea 1}. Por eso hay 24 valores en lugar
-        de 12 líneas, y cada línea queda partida en dos series. Se normalizó a \archivo{Linea N}.
+        de 12 líneas, y cada línea queda partida en dos series. Se normalizó a \archivo{Línea N}.
   \item Los cierres de la Línea~12 (2021--2023) y de la Línea~1 (2022--2024) reducen la afluencia
         por causas ajenas a la demanda. Deben marcarse en la limpieza.
 \end{enumerate}
@@ -146,7 +146,7 @@ está registrado en \archivo{data/raw/MANIFEST.csv}. La cobertura real aparece e
 \end{itemize}
 \textbf{Resultado:}
 \begin{itemize}
-  \item FGJ: 1\,937\,812 carpetas limpias, el 97.5\,\% del original.
+  \item FGJ: 1,937,812 carpetas limpias, el 97.5\,\% del original.
   \item Metrobús: 7 líneas unificadas y 2 errores anulados.
   \item Aparecen primeros indicios a favor de H1 y H2, y un contraste Metro--Metrobús no previsto.
 \end{itemize}
@@ -222,7 +222,7 @@ renombró la columna (Sección~\ref{sec:limpieza}).\\
 agregar. En el notebook 01 se unificaron las fechas, se unieron las dos series, se asignó la clave
 INEGI y se agregaron los datos por mes, alcaldía y tipo de accidente. Cada error encontrado se
 registró en una tabla dentro de la sección.\\
-\textbf{Resultado:} \archivo{transito_alcaldia_mes.csv}, con 8\,064 filas y 164\,706 accidentes.\\
+\textbf{Resultado:} \archivo{transito_alcaldia_mes.csv}, con 8,064 filas y 164,706 accidentes.\\
 \textbf{Observaciones:} se agregó la errata \enquote{CUAHUTEMOC} al catálogo común de alcaldías
 (\archivo{src/clean/catalogos.py}).
 
@@ -254,7 +254,7 @@ Líneas~1 y 12, el Metro solo recuperó el 83\,\% de 2019.
 \textbf{Procedimiento:} en el notebook 01 se agregaron los accidentes limpios por día, alcaldía y
 tipo sobre la cuadrícula completa, con 0 donde no hubo accidentes. Igual que con el Metro, se revisó
 el total diario contra su mediana móvil.\\
-\textbf{Resultado:} \archivo{transito_alcaldia_dia} (245\,472 filas), que cuadra mes por mes con la
+\textbf{Resultado:} \archivo{transito_alcaldia_dia} (245,472 filas), que cuadra mes por mes con la
 tabla mensual.\\
 \textbf{Observaciones:} no falta ningún día, pero siete días tienen un registro anormalmente bajo;
 se marcaron con \archivo{registro\_bajo} y se agregaron a la tabla de errores.
@@ -266,6 +266,41 @@ ejecutar. Se verificó que el resto de la tabla no cambió. Después se limpiaro
 COVID-19 en el notebook 01: se completó el calendario, se revisó la consistencia entre columnas, se
 analizó el efecto del día de la semana y se generaron las tablas diaria, semanal y mensual.\\
 \textbf{Resultado:} \archivo{covid_dia}, \archivo{covid_semana} y \archivo{covid_mes}, con
-1\,617\,973 positivos de residentes, y la gráfica semanal.\\
+1,617,973 positivos de residentes, y la gráfica semanal.\\
 \textbf{Observaciones:} solo se encontró una fila inconsistente. La semana de los casos usa la misma
 clave ISO que el semáforo, así que ambas fuentes se pueden unir directamente.
+
+\subsection{2026-10-02 --- Corrección de formato del informe y limpieza explícita en el notebook}
+\textbf{Problema:} en el PDF los separadores de miles se veían como espacios (por ejemplo,
+\enquote{1 180 920}) en lugar de comas, y en el notebook 01 no se veía cómo se limpiaron todas las
+fuentes: la FGJ y el Metrobús solo mostraban el reporte de sus scripts, y el semáforo y el IMSS tenían
+código sin explicación.\\
+\textbf{Procedimiento:} se cambiaron todos los separadores de miles del informe a coma (1,180,920) y se
+corrigió la escritura \archivo{Línea N}. En el notebook 01 se agregó un índice de secciones y se
+explicó cada paso del semáforo (incluida la detección de las semanas faltantes contra el calendario
+completo) y del IMSS. Para la FGJ y el Metrobús se agregaron celdas que repiten a la vista cada paso de
+sus scripts, con el número de registros afectados, y al final comprueban que el resultado es idéntico
+a lo que guardó el script. También se corrigió la numeración de los pasos de la ocupación hotelera.\\
+\textbf{Resultado:} el notebook se ejecutó completo sin errores y las comprobaciones contra los datos
+del script dieron resultados idénticos.
+
+\subsection{2026-10-02 --- Verificación de cifras, semáforo completo y versión en Word}
+\textbf{Procedimiento:} se recalcularon desde los datos limpios todas las cifras que cita el informe
+(Metro, Metrobús, FGJ, IMSS, ocupación hotelera, hechos de tránsito y casos COVID).\\
+\textbf{Resultado:} casi todas coincidieron. Se corrigieron cinco puntos:
+\begin{itemize}
+  \item FGJ: el percentil 90 del retraso de la denuncia es de 56 días, no de 70. El valor anterior
+        incluía hechos anteriores a 2016, que después se descartan.
+  \item FGJ: los duplicados no tienen la hora de inicio vacía. Todos tienen \archivo{00:00:00}, un
+        valor de relleno.
+  \item IMSS: diciembre de 2020 no es el mínimo. El punto más bajo fue marzo de 2021 (3,213,626
+        puestos). Se completaron en la tabla las mujeres y el salario de ambos meses.
+  \item Hechos de tránsito: se agregaron las excepciones al patrón por alcaldía (Milpa Alta y
+        Venustiano Carranza).
+  \item Metro y COVID: se agregó la Línea~B a la lista de líneas rezagadas, y se aclaró que los 323
+        días de la tabla de COVID son fines de semana.
+\end{itemize}
+Además, se rellenaron las semanas 2020-W53 y 2022-W01 del semáforo con el color de sus semanas
+vecinas, que era el mismo antes y después, y se marcaron con \archivo{imputado}. Por último, el informe
+se exportó a Word (\archivo{informe/informe.docx}) con el script \archivo{informe/a_word.py}, que usa
+pandoc y se puede volver a correr después de cualquier cambio.

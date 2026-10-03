@@ -47,7 +47,8 @@ Scripts en `src/download/`; cada archivo queda en `data/raw/MANIFEST.csv`.
 ### Problemas encontrados en la descarga → tareas nuevas
 - [ ] Hechos de tránsito: documentar el salto 2021–2022 de la serie ampliada (cambio de registro) y decidir si se usa solo como indicador relativo
 - [ ] Definir la ventana post-pandemia común (2023-01 → 2024-07) por el corte de FGJ, Ecobici y hoteles
-- [ ] Semáforo: rellenar las semanas 2020-W53 y 2022-W01 (no vienen en el archivo) y documentar las diferencias con el semáforo local de la CDMX
+- [x] Semáforo: rellenar las semanas 2020-W53 y 2022-W01 (mismo color que la semana anterior y la siguiente; columna `imputado`) (2-oct-2026)
+- [ ] Semáforo: documentar las diferencias con el semáforo local de la CDMX
 
 ### Opcionales (solo si hace falta ampliar)
 - [ ] STE, RTP, afluencia preliminar, movilidad histórico COVID, GTFS, Google Mobility
@@ -70,7 +71,11 @@ Scripts en `src/download/`; cada archivo queda en `data/raw/MANIFEST.csv`.
 - [x] **FGJ** (`src/clean/fgj.py`): 1,987,424 → 1,937,812 carpetas; fecha del hecho; 22 grupos de delito estables; duplicados y últimos 2 meses marcados
 - [x] **Metrobús** (`src/clean/metrobus.py`): líneas unificadas (14 → 7), 2 errores anulados, 57 valores estimados marcados, 30 días atípicos reales conservados
 - [x] Notebook `01_limpieza_datasets.ipynb` con los resultados de FGJ y Metrobús (reportes, faltantes, gráficas)
-- [ ] Semáforo (notebook 01): ya está en formato largo y guardado; falta rellenar 2020-W53 y 2022-W01
+- [x] Notebook 01: limpieza explícita paso a paso de FGJ y Metrobús (comprobada contra la salida de los scripts), y explicación de cada paso del semáforo, el IMSS y los hoteles (2-oct-2026)
+- [x] Informe: separadores de miles con coma (1,180,920) en lugar de espacio fino (2-oct-2026)
+- [x] Verificación de todas las cifras del informe contra `data/interim/`; 5 correcciones (FGJ p90 = 56 días, hora 00:00:00 en duplicados, mínimo IMSS = mar-2021, excepciones por alcaldía, Línea B) (2-oct-2026)
+- [x] Versión en Word: `informe/informe.docx`, generada con `informe/a_word.py` (requiere pandoc o `pip install pypandoc_binary`) (2-oct-2026)
+- [x] Semáforo (notebook 01): formato largo, 160 semanas completas; 2020-W53 (rojo) y 2022-W01 (verde) rellenadas y marcadas con `imputado`
 - [x] Metro (notebook 01): mojibake, 24 → 12 líneas, 2 estaciones con doble escritura, duplicado Oceanía/Deportivo Oceanía, columna `estado` (abierta / cerrada / no_existia / sin_registro), cierres de L12 y L1 marcados → `metro_linea_dia`, `metro_estacion_mes`, `metro_mes`; tabla de errores y 3 gráficas (27-sep-2026)
 - [ ] Metro: en la integración usar `afluencia_diaria_promedio` y una variante **sin L1 ni L12** (2021-05 → 2025-12) para separar obras de pandemia
 - [ ] Metro (opcional): pasar la limpieza del notebook a `src/clean/metro.py`, como la del Metrobús

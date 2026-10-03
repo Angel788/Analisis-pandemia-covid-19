@@ -12,7 +12,7 @@ Decisiones (ver docs/limpieza_fgj.md):
 - La alcaldía se toma de `alcaldia_hecho`; si falta, se infiere de las coordenadas. Las
   "CDMX (indeterminada)" se conservan para el total de la ciudad, sin alcaldía.
 - Las filas idénticas en todas las columnas se MARCAN (`duplicado_exacto`), no se borran.
-- Los últimos meses están subregistrados: un hecho se denuncia con retraso (p90 = 70 días) y el
+- Los últimos meses están subregistrados: un hecho se denuncia con retraso (p90 = 56 días para los hechos desde 2016) y el
   archivo termina en la fecha de corte. Se marca con `mes_incompleto`.
 
 Uso:
@@ -28,7 +28,7 @@ from .catalogos import RAIZ, RAW, cve_por_coordenadas, guardar, cve_por_nombre, 
 from .grupos_delito import clasificar
 
 INICIO = pd.Timestamp("2016-01-01")
-# Meses finales con subregistro por denuncia tardía (≈10 % de los hechos se denuncian después de 70 días)
+# Meses finales con subregistro por denuncia tardía (≈9 % de los hechos desde 2016 se denuncian después de 70 días)
 MESES_INCOMPLETOS = 2
 
 reporte: list[tuple[str, int, str]] = []

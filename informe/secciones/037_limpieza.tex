@@ -4,7 +4,7 @@ Cada fuente se limpia con su propio script en \archivo{src/clean/}. Todos leen d
 \archivo{data/raw/} sin modificar los originales y escriben en \archivo{data/interim/} en dos
 formatos: CSV, el principal, que se abre en Excel y en cualquier programa, y Parquet, un respaldo más
 ligero que conserva los tipos de dato. La base de carpetas de la FGJ tiene 1.9 millones de filas, más de
-las 1\,048\,576 que admite Excel, por lo que se trabaja con pandas o con su versión agregada. Cada script genera además un reporte en \archivo{docs/limpieza_<fuente>.md}, con el número
+las 1,048,576 que admite Excel, por lo que se trabaja con pandas o con su versión agregada. Cada script genera además un reporte en \archivo{docs/limpieza_<fuente>.md}, con el número
 de registros afectados en cada paso.
 
 \subsection{Catálogos comunes}
@@ -26,7 +26,7 @@ El módulo \archivo{catalogos.py} concentra lo que comparten todas las fuentes:
   \item \textbf{Fecha del hecho, no de inicio.} Cada archivo anual contiene las carpetas
         \emph{iniciadas} ese año, que pueden referirse a hechos anteriores. Para medir cuándo ocurren
         los delitos se usa \archivo{fecha_hecho}. La mediana del retraso entre el hecho y la denuncia
-        es de 1 día, pero el percentil 90 es de 70 días.
+        es de 1 día, pero el percentil 90 es de 56 días.
   \item \textbf{Ventana 2016 -- julio de 2024.} Se descartan los hechos anteriores a 2016: solo
         aparecen si se denunciaron desde 2016, así que su registro está incompleto. Por la misma razón,
         junio y julio de 2024 se marcan como \emph{meses incompletos}, porque todavía faltan las
@@ -34,8 +34,8 @@ El módulo \archivo{catalogos.py} concentra lo que comparten todas las fuentes:
   \item \textbf{Alcaldía.} Se toma de \archivo{alcaldia_hecho}. Coincide con la alcaldía calculada por
         coordenadas en el 99.7\,\% de los casos. Los registros \enquote{CDMX (indeterminada)} no
         traen coordenadas, así que se conservan para el total de la ciudad con la clave \archivo{09000}.
-  \item \textbf{Duplicados.} El archivo no trae un identificador de carpeta. Las 3\,824 filas
-        idénticas en las 21 columnas (0.19\,\%) tienen hora de inicio vacía y son sobre todo fraude y
+  \item \textbf{Duplicados.} El archivo no trae un identificador de carpeta. Las 3,824 filas
+        idénticas en las 21 columnas (0.19\,\%) tienen como hora de inicio \archivo{00:00:00}, un valor de relleno, y son sobre todo fraude y
         abuso de confianza, lo que sugiere denuncias múltiples de un mismo hecho. Se \emph{marcan} en
         lugar de borrarse, y el conteo agregado las excluye.
   \item \textbf{Grupos de delito estables.} Los 352 delitos distintos se agrupan en 22 categorías
@@ -52,34 +52,34 @@ El módulo \archivo{catalogos.py} concentra lo que comparten todas las fuentes:
 \toprule
 \textbf{Paso} & \textbf{Registros} & \textbf{Acción}\\
 \midrule
-Registros leídos (9 archivos) & 1\,987\,424 & ---\\
-Idénticos en las 21 columnas & 3\,824 & se marcan\\
+Registros leídos (9 archivos) & 1,987,424 & ---\\
+Idénticos en las 21 columnas & 3,824 & se marcan\\
 Sin fecha del hecho & 545 & se descartan\\
-Hecho anterior a 2016 & 32\,223 & se descartan\\
+Hecho anterior a 2016 & 32,223 & se descartan\\
 Hecho posterior al inicio de la carpeta & 110 & se descartan\\
-Hecho fuera de la CDMX & 16\,734 & se descartan\\
-En la CDMX sin alcaldía identificable & 18\,595 & se conservan (clave 09000)\\
-Hechos no delictivos & 66\,960 & se marcan\\
-Últimos 2 meses (subregistro) & 30\,814 & se marcan\\
+Hecho fuera de la CDMX & 16,734 & se descartan\\
+En la CDMX sin alcaldía identificable & 18,595 & se conservan (clave 09000)\\
+Hechos no delictivos & 66,960 & se marcan\\
+Últimos 2 meses (subregistro) & 30,814 & se marcan\\
 \midrule
-\textbf{Base limpia} & \textbf{1\,937\,812} & 97.5\,\% del original\\
+\textbf{Base limpia} & \textbf{1,937,812} & 97.5\,\% del original\\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \paragraph{Salidas.} \archivo{fgj_carpetas.parquet}, con una fila por carpeta, y
 \archivo{fgj_alcaldia_mes.parquet}, con los conteos por alcaldía, mes y grupo de delito
-(34\,683 filas). Esta tabla incluye la clave INEGI y el nombre de la alcaldía; las carpetas sin
+(34,683 filas). Esta tabla incluye la clave INEGI y el nombre de la alcaldía; las carpetas sin
 alcaldía identificable aparecen con la clave 09000 y el nombre \enquote{CDMX (sin alcaldía)}.
 
 \paragraph{Primeros resultados.} La Figura~\ref{fig:fgj_grupos} muestra tres grupos con
 comportamientos distintos:
 \begin{itemize}
-  \item \textbf{Robo a transeúnte:} cayó con el confinamiento y no se ha recuperado (18\,528
-        carpetas en 2019, 12\,306 en 2020 y 10\,682 en 2023). Sin embargo, \emph{ya venía bajando
+  \item \textbf{Robo a transeúnte:} cayó con el confinamiento y no se ha recuperado (18,528
+        carpetas en 2019, 12,306 en 2020 y 10,682 en 2023). Sin embargo, \emph{ya venía bajando
         desde finales de 2018}, así que no toda la caída puede atribuirse a la pandemia.
   \item \textbf{Violencia familiar:} bajó en abril de 2020, probablemente porque el confinamiento
-        dificultó denunciar, y después subió con fuerza (25\,802 en 2019, 28\,340 en 2020 y 37\,310
+        dificultó denunciar, y después subió con fuerza (25,802 en 2019, 28,340 en 2020 y 37,310
         en 2023). Esto es consistente con la hipótesis H2.
   \item \textbf{Robo en transporte público:} cayó a menos de la mitad y se estabilizó en ese nivel,
         igual que la afluencia del Metro.
@@ -102,9 +102,9 @@ propia con datos de la FGJ.}\label{fig:fgj_grupos}
 \toprule
 \textbf{Paso} & \textbf{Resultado}\\
 \midrule
-Registros leídos (fecha × línea) & 53\,732\\
+Registros leídos (fecha × línea) & 53,732\\
 Nombres de línea (\archivo{Línea N} / \archivo{linea N} en 2023) & 14 $\rightarrow$ 7 unificados\\
-Vacíos antes de la inauguración de cada línea & 17\,227; no son faltantes, se marcan\\
+Vacíos antes de la inauguración de cada línea & 17,227; no son faltantes, se marcan\\
 Faltantes con la línea operando & 0\\
 Duplicados fecha × línea & 0\\
 Días atípicos respecto a la mediana móvil de 29 días & 30; se conservan (eventos reales)\\
@@ -142,7 +142,7 @@ elaboración propia con datos del STC Metro y del Metrobús.}\label{fig:metro_mb
 \subsection{Puestos de trabajo asegurados (IMSS)}
 La limpieza del IMSS se hizo paso a paso en el notebook \archivo{01_limpieza_datasets.ipynb}. El
 resultado, \archivo{imss_subdelegacion_mes.csv}, tiene una fila por mes y subdelegación del IMSS:
-128 meses por 10 subdelegaciones, es decir, 1\,280 filas.
+128 meses por 10 subdelegaciones, es decir, 1,280 filas.
 
 \paragraph{Decisiones.}
 \begin{itemize}
@@ -164,7 +164,7 @@ resultado, \archivo{imss_subdelegacion_mes.csv}, tiene una fila por mes y subdel
 
 \paragraph{Validación.} No faltan meses. Hombres, mujeres y no binario suman exactamente los
 puestos, y los rangos salariales también. Diciembre de 2019 coincide con la cifra calculada
-directamente del archivo original (3\,470\,048 puestos).
+directamente del archivo original (3,470,048 puestos).
 
 \begin{table}[h]
 \centering
@@ -174,16 +174,18 @@ directamente del archivo original (3\,470\,048 puestos).
 \toprule
 \textbf{Mes} & \textbf{Puestos} & \textbf{Mujeres} & \textbf{Salario diario (nominal)}\\
 \midrule
-Diciembre 2019 & 3\,470\,048 & 1\,447\,069 & \$471\\
-Diciembre 2020 (mínimo) & 3\,246\,669 & --- & ---\\
-Diciembre 2024 & 3\,479\,354 & 1\,518\,611 & \$729\\
-Agosto 2026 & 3\,689\,815 & 1\,585\,251 & \$801\\
+Diciembre 2019 & 3,470,048 & 1,447,069 & \$471\\
+Diciembre 2020 & 3,246,669 & 1,347,572 & \$510\\
+Marzo 2021 (mínimo) & 3,213,626 & 1,338,652 & \$539\\
+Diciembre 2024 & 3,479,354 & 1,518,611 & \$729\\
+Agosto 2026 & 3,689,815 & 1,585,251 & \$801\\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \paragraph{Primeros resultados.} Entre febrero y diciembre de 2020 se perdieron unos 200 mil
-empleos formales. El promedio anual volvió a 99.6 (2019 = 100) en 2023 y a 101.2 en 2024. El
+empleos formales, y el punto más bajo llegó en marzo de 2021, con unos 233 mil puestos menos que en
+febrero de 2020. El promedio anual volvió a 99.6 (2019 = 100) en 2023 y a 101.2 en 2024. El
 empleo formal se recuperó mucho antes que la afluencia del Metro, que sigue entre 73 y 79, lo cual
 apoya la hipótesis H3.
 
@@ -252,14 +254,14 @@ por debajo del nivel previo a la pandemia. Queda pendiente estimar 2016 a septie
 
 \subsection{Hechos de tránsito}
 Se unieron la serie ampliada (2018--2023) y la de 2024, y se construyó una tabla con el número de
-accidentes por mes, alcaldía y tipo, junto con las personas lesionadas y fallecidas. Son 8\,064 filas:
+accidentes por mes, alcaldía y tipo, junto con las personas lesionadas y fallecidas. Son 8,064 filas:
 84 meses por 16 alcaldías por 6 tipos. Las combinaciones sin accidentes se registran como 0, porque no
 son datos faltantes. El notebook 01 incluye al final de la sección una tabla con todos los errores
 encontrados, los registros afectados y la decisión tomada. Los principales fueron:
 \begin{itemize}
   \item \textbf{Formatos distintos} de fecha (aaaa-mm-dd frente a dd/mm/aaaa) y de hora entre los
         dos archivos.
-  \item \textbf{Folio \enquote{SD}} (sin dato) en 7\,288 registros, casi todos de 2018. Los folios
+  \item \textbf{Folio \enquote{SD}} (sin dato) en 7,288 registros, casi todos de 2018. Los folios
         repetidos corresponden a accidentes distintos, así que se contaron filas y no folios.
   \item \textbf{28 duplicados reales}, con la misma fecha, hora, tipo y coordenadas. Se eliminaron.
   \item \textbf{Nombres de alcaldía no estándar}, como \enquote{GUSTAVO A MADERO},
@@ -273,26 +275,26 @@ encontrados, los registros afectados y la decisión tomada. Los principales fuer
 
 \begin{table}[h]
 \centering
-\caption{Hechos de tránsito por año (164\,706 accidentes).}\label{tab:transito}
+\caption{Hechos de tránsito por año (164,706 accidentes).}\label{tab:transito}
 \small
 \begin{tabular}{lrrrrr}
 \toprule
 \textbf{Año} & \textbf{Choque} & \textbf{Atropellado} & \textbf{Caída de ciclista} & \textbf{Total} & \textbf{Fallecidos}\\
 \midrule
-2018 & 9\,608 & 4\,297 & 156 & 17\,025 & 394\\
-2019 & 8\,471 & 5\,086 & 133 & 18\,014 & 397\\
-2020 & 9\,251 & 2\,761 & 544 & 16\,440 & 388\\
-2021 & 13\,445 & 3\,468 & 762 & 22\,855 & 424\\
-2022 & 18\,523 & 4\,676 & 845 & 30\,702 & 533\\
-2023 & 17\,593 & 4\,552 & 711 & 29\,020 & 472\\
-2024 & 18\,109 & 4\,821 & 760 & 30\,650 & 533\\
+2018 & 9,608 & 4,297 & 156 & 17,025 & 394\\
+2019 & 8,471 & 5,086 & 133 & 18,014 & 397\\
+2020 & 9,251 & 2,761 & 544 & 16,440 & 388\\
+2021 & 13,445 & 3,468 & 762 & 22,855 & 424\\
+2022 & 18,523 & 4,676 & 845 & 30,702 & 533\\
+2023 & 17,593 & 4,552 & 711 & 29,020 & 472\\
+2024 & 18,109 & 4,821 & 760 & 30,650 & 533\\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \paragraph{Tabla diaria.} Por si el análisis la requiere, se generó también
-\archivo{transito_alcaldia_dia}, con los mismos accidentes por día, alcaldía y tipo: 245\,472 filas
-(2\,557 días por 16 alcaldías por 6 tipos). Sus sumas coinciden mes por mes con la tabla mensual. No
+\archivo{transito_alcaldia_dia}, con los mismos accidentes por día, alcaldía y tipo: 245,472 filas
+(2,557 días por 16 alcaldías por 6 tipos). Sus sumas coinciden mes por mes con la tabla mensual. No
 falta ningún día, pero siete días tienen menos del 40\,\% de los registros normales según la mediana
 móvil de 29 días. Por ejemplo, el 7 de mayo de 2018 tiene 4 accidentes y el 26 de junio de 2023 tiene
 10, cuando lo normal es alrededor de 30 y 80. Probablemente son días con registro incompleto: se
@@ -318,6 +320,9 @@ oficinas que en las periféricas y populares:
 \begin{itemize}
   \item Centrales: Coyoacán 38, Miguel Hidalgo 43, Cuauhtémoc 45 y Benito Juárez 48 (2019 = 100).
   \item Periféricas: Iztapalapa 63, Gustavo A.~Madero 68 e Iztacalco 68.
+  \item Excepciones: Milpa Alta, periférica, cayó tanto como las centrales (43), y Venustiano
+        Carranza, central, cayó poco (68). Milpa Alta tiene pocos atropellados al año, así que su
+        índice varía mucho.
 \end{itemize}
 Esto es coherente con la hipótesis H4: donde más gente pudo trabajar desde casa, menos personas
 salieron a la calle. Las muertes en hechos de tránsito se mantuvieron en unas 395 al año entre 2018 y
@@ -351,7 +356,7 @@ cambio de registro.
 
 \subsection{Afluencia del Metro}
 La limpieza se hizo por pasos en el notebook 01, a partir de \archivo{afluencia_metro_simple.csv}
-(1\,180\,920 registros: 195 estaciones por día entre enero de 2010 y julio de 2026). La versión
+(1,180,920 registros: 195 estaciones por día entre enero de 2010 y julio de 2026). La versión
 desglosada por tipo de pago solo existe desde 2021 y suma exactamente lo mismo día por día, así que no
 se usó. No hay celdas vacías, días faltantes ni valores negativos; los problemas estaban en los
 nombres y en el significado de los ceros (Tabla~\ref{tab:limpieza_metro}).
@@ -364,21 +369,21 @@ nombres y en el significado de los ceros (Tabla~\ref{tab:limpieza_metro}).
 \toprule
 \textbf{Error} & \textbf{Registros} & \textbf{Decisión}\\
 \midrule
-Línea escrita \archivo{LÃ­nea N} (2021--2023) y \archivo{Linea N} (resto) & 171\,795 & Se repara y se unifica a \archivo{Línea N} (24 $\rightarrow$ 12)\\
-Nombre de estación con \emph{mojibake} (\archivo{CatÃ³lica}) & 379\,245 & Se repara con \archivo{ftfy}\\
-Gómez Farias / Peñón viejo (desde 2023-06) & 2\,314 & Se unifican a la escritura anterior\\
+Línea escrita \archivo{LÃ­nea N} (2021--2023) y \archivo{Linea N} (resto) & 171,795 & Se repara y se unifica a \archivo{Línea N} (24 $\rightarrow$ 12)\\
+Nombre de estación con \emph{mojibake} (\archivo{CatÃ³lica}) & 379,245 & Se repara con \archivo{ftfy}\\
+Gómez Farias / Peñón viejo (desde 2023-06) & 2,314 & Se unifican a la escritura anterior\\
 Línea~B, dic-2020: \enquote{Oceanía} dos veces por día y falta \enquote{Deportivo Oceanía} & 31 & El 2.º registro se reasigna a Deportivo Oceanía\\
-Ceros de la Línea~12 antes de su inauguración & 20\,780 & Vacío; estado \archivo{no\_existia}\\
-Sistema completo en $\approx$0 (servicio gratuito: 16--17 mar 2016 y 20--27 sep 2017) & 1\,950 & Vacío; estado \archivo{sin\_registro}\\
-Estación cerrada (COVID, obras de L1 y L12, incendio del PCC) & 39\,667 & Es un 0 real; estado \archivo{cerrada}\\
+Ceros de la Línea~12 antes de su inauguración & 20,780 & Vacío; estado \archivo{no\_existia}\\
+Sistema completo en $\approx$0 (servicio gratuito: 16--17 mar 2016 y 20--27 sep 2017) & 1,950 & Vacío; estado \archivo{sin\_registro}\\
+Estación cerrada (COVID, obras de L1 y L12, incendio del PCC) & 39,667 & Es un 0 real; estado \archivo{cerrada}\\
 Días $>$ 4 veces la mediana móvil de 29 días & 90 & Se conservan (12 de diciembre, conciertos, reaperturas)\\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \paragraph{Duplicado de Oceanía.} En diciembre de 2020 la estación Oceanía de la Línea~B aparece dos
-veces por día y Deportivo Oceanía no aparece. El primer registro promedia 5\,307 viajes, parecido a
-Oceanía en noviembre (5\,625), y el segundo 7\,054, parecido a Deportivo Oceanía (7\,310). Además, el
+veces por día y Deportivo Oceanía no aparece. El primer registro promedia 5,307 viajes, parecido a
+Oceanía en noviembre (5,625), y el segundo 7,054, parecido a Deportivo Oceanía (7,310). Además, el
 segundo ocupa en el archivo el lugar de Deportivo Oceanía en el orden de la línea. Por eso se trató
 como un error de etiqueta y se reasignó en lugar de borrarse.
 
@@ -390,10 +395,10 @@ de marzo de 2016. Se dejaron vacíos para no simular que nadie usó el Metro, y 
 se calculan solo con los días que tienen dato.
 
 \paragraph{Salidas.} La tabla por estación y día supera el límite de filas de Excel, así que se
-guardaron tres agregados en CSV y Parquet: \archivo{metro_linea_dia} (71\,633 filas),
-\archivo{metro_estacion_mes} (38\,125) y \archivo{metro_mes} (199 meses, con el total, los días con
+guardaron tres agregados en CSV y Parquet: \archivo{metro_linea_dia} (71,633 filas),
+\archivo{metro_estacion_mes} (38,125) y \archivo{metro_mes} (199 meses, con el total, los días con
 dato, las estaciones cerradas en promedio y una columna por línea). Los totales de las tres tablas
-coinciden con los de la base depurada (23\,155 millones de viajes).
+coinciden con los de la base depurada (23,155 millones de viajes).
 
 \paragraph{Cierres de líneas.} La Línea~12 estuvo cerrada por completo desde el colapso del 3 de
 mayo de 2021, reabrió por tramos desde enero de 2023 y por completo en enero de 2024. La Línea~1
@@ -406,7 +411,8 @@ el promedio de 2020 fue el 56\,\%, lo que apoya la hipótesis H1 (Figura~\ref{fi
 2025 el Metro llegó al 79\,\% de 2019. Sin las Líneas~1 y 12 llega al 83\,\%: los cierres por obra
 explican solo una parte de la diferencia y la demanda todavía no ha vuelto. La recuperación también
 es desigual entre líneas (Figura~\ref{fig:metro_lineas}). En 2025 las Líneas~A, 9, 8, 12 y 4 están
-entre 87 y 96, y las Líneas~2, 3, 5, 6 y 7 entre 73 y 82.
+entre 87 y 96, y las Líneas~2, 3, 5, 6, 7 y B entre 73 y 82. La Línea~1, todavía en obras
+buena parte del año, llegó a 51.
 
 \begin{figure}[h]
 \centering
@@ -444,12 +450,12 @@ el notebook 01 (Tabla~\ref{tab:limpieza_covid}).
 Días de marzo de 2020 sin fila (sin muestras tomadas) & 17 & Se agregan con 0 y se marcan\\
 Antes del 5-abr-2020, menos de 70 pruebas por día (arranque del registro) & 31 & Se conservan y se marcan\\
 29-mar-2020: positivos de residentes (6) mayores que el total (5) & 1 & Se sube el total a 6\\
-El domingo tiene unas 4 veces menos pruebas que entre semana & 323 & No es error: promedio móvil de 7 días y análisis semanal\\
+Fines de semana con muchas menos pruebas (el domingo, unas 4 veces menos que entre semana) & 323 & No es error: promedio móvil de 7 días y análisis semanal\\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\paragraph{Salidas.} \archivo{covid_dia} (1\,130 días), \archivo{covid_semana} (162 semanas, con la
+\paragraph{Salidas.} \archivo{covid_dia} (1,130 días), \archivo{covid_semana} (162 semanas, con la
 misma semana ISO que el semáforo para poder unirlos) y \archivo{covid_mes} (38 meses). Las tasas
 semanales y mensuales se calculan con las sumas del periodo, no como promedio de tasas diarias. La
 primera y la última semana y el primer y el último mes están incompletos y se marcan. Después de
@@ -467,3 +473,21 @@ positividad junto con los positivos.
 \includegraphics[width=\textwidth]{figuras/covid_semanal.png}
 \caption{Casos positivos de COVID-19 por semana y tasa de positividad (residentes de la CDMX).}\label{fig:covid}
 \end{figure}
+
+\subsection{Semáforo epidemiológico}
+Es la segunda variable de control: indica qué restricciones estaban vigentes cada semana. El archivo
+viene en formato ancho, con una fila por entidad y una columna por semana ISO. La limpieza, hecha en el
+notebook 01, consistió en cuatro pasos:
+\begin{enumerate}
+  \item \textbf{Filtrar la CDMX} y pasar a formato largo, con una fila por semana.
+  \item \textbf{Fecha de la semana:} el lunes de cada semana ISO, igual que en \archivo{covid_semana},
+        para poder unir las dos fuentes.
+  \item \textbf{Semanas faltantes.} La revisión con \archivo{isna()} no encontró vacíos, pero al
+        comparar contra el calendario completo faltaban dos semanas: 2020-W53 (2020 tuvo 53 semanas
+        ISO) y 2022-W01.
+  \item \textbf{Relleno.} En ambos casos la semana anterior y la siguiente tienen el mismo color (rojo
+        y verde, respectivamente), así que se rellenaron con ese color y se marcaron con la columna
+        \archivo{imputado}. Si los colores vecinos hubieran sido distintos, no se habría rellenado.
+\end{enumerate}
+El resultado, \archivo{semaforo_cdmx_semana.csv}, tiene 160 semanas, de 2020-W22 a 2023-W24: 15 en
+rojo, 42 en naranja, 20 en amarillo y 83 en verde.
